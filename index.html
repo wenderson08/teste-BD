@@ -270,6 +270,8 @@
    
     // Todos os colaboradores mantidos e exemplo de conflito
     let collaborators = [];
+    const PIN_CORRETO = "131208087704";
+    const API_URL = "https://script.google.com/macros/library/d/1eQqZC9_UY8aeJ69lVyDlgvLPCrV9Gwz0MmytbSz9QnDl5pw6b7QjiKPU/2";
 async function fetchCollaboratorsFromSheet() {
   await fetchAndUpdate();
   };
@@ -520,8 +522,7 @@ startApp();
       document.querySelector(".container").classList.toggle("dark-mode");
     });
 
-const PIN_CORRETO = "131208087704";
-const API_URL = "https://script.google.com/macros/library/d/1eQqZC9_UY8aeJ69lVyDlgvLPCrV9Gwz0MmytbSz9QnDl5pw6b7QjiKPU/2"; // Substitua pela URL do seu Apps Script
+ // Substitua pela URL do seu Apps Script
 
 // Botão Editar
 document.getElementById("edit-toggle").onclick = function() {
@@ -611,6 +612,7 @@ async function renderEditList() {
 // Editar colaborador
 window.editColab = function(i) {
   const c = collaborators[i];
+  
   document.getElementById("edit-index").value = i;
   document.getElementById("edit-chave").value = c.chave;
   document.getElementById("edit-nome").value = c.name;
@@ -719,6 +721,7 @@ async function fetchAndUpdate() {
   
 </body>
 </html>
+
 
 
 
