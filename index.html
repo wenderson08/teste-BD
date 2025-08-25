@@ -266,39 +266,14 @@
     <img src="Fotos Colaboradores/logo2.png" width="70" height="80">
   </footer>
   <script>
-    
+    const PIN_CORRETO = "131208087704";
+    const API_URL = "https://script.google.com/macros/library/d/1eQqZC9_UY8aeJ69lVyDlgvLPCrV9Gwz0MmytbSz9QnDl5pw6b7QjiKPU/2";
    
     // Todos os colaboradores mantidos e exemplo de conflito
     let collaborators = [];
 async function fetchCollaboratorsFromSheet() {
   await fetchAndUpdate();
-  const sheetUrl = "https://script.google.com/macros/library/d/1eQqZC9_UY8aeJ69lVyDlgvLPCrV9Gwz0MmytbSz9QnDl5pw6b7QjiKPU/2";
-  const res = await fetch(sheetUrl);
-  const csv = await res.text();
-  // Troque ',' por '\t' para separar corretamente as colunas
-  const lines = csv.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-
-  const idxNome = headers.indexOf("nome completo");
-  const idxSetor = headers.indexOf("setor");
-  const idxAniversario = headers.indexOf("aniversario");
-  const idxVac1 = headers.indexOf("1º periodo de ferias");
-  const idxVac2 = headers.indexOf("2º periodo de ferias");
-  const idxVac3 = headers.indexOf("3º periodo de ferias");
-  const idxFoto = headers.indexOf("foto");
-
-  collaborators = lines.slice(1).map(line => {
-    const cols = line.split(',');
-    const vacations = [];
-    if (cols[idxVac1]) vacations.push({start: cols[idxVac1], end: cols[idxVac1]});
-    if (cols[idxVac2]) vacations.push({start: cols[idxVac2], end: cols[idxVac2]});
-    if (cols[idxVac3]) vacations.push({start: cols[idxVac3], end: cols[idxVac3]});
-    return {
-      name: cols[idxNome] || "",
-      setor: cols[idxSetor] || "",
-      photo: (cols[idxFoto] && cols[idxFoto] !== "N/A") ? cols[idxFoto] : "", // se não tiver foto, usa placeholder
-      birthday: cols[idxAniversario] || "",
-      vacations
+  
     };
   });
 }
@@ -548,8 +523,7 @@ startApp();
       document.querySelector(".container").classList.toggle("dark-mode");
     });
 
-const PIN_CORRETO = "131208087704";
-const API_URL = "https://script.google.com/macros/library/d/1eQqZC9_UY8aeJ69lVyDlgvLPCrV9Gwz0MmytbSz9QnDl5pw6b7QjiKPU/2"; // Substitua pela URL do seu Apps Script
+ // Substitua pela URL do seu Apps Script
 
 // Botão Editar
 document.getElementById("edit-toggle").onclick = function() {
@@ -747,6 +721,7 @@ async function fetchAndUpdate() {
   
 </body>
 </html>
+
 
 
 
