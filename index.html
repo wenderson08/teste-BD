@@ -272,7 +272,7 @@
     let collaborators = [];
 async function fetchCollaboratorsFromSheet() {
   await fetchAndUpdate();
-  const sheetUrl = "https://script.google.com/macros/s/AKfycbzKwUXw7N8BpzZUEvt_CatMd225ZQY2XIhK-EBAb4DyxXFux13IBP2HHmJ5NX-EXBlQ/exec";
+  const sheetUrl = "https://script.google.com/macros/library/d/1eQqZC9_UY8aeJ69lVyDlgvLPCrV9Gwz0MmytbSz9QnDl5pw6b7QjiKPU/2";
   const res = await fetch(sheetUrl);
   const csv = await res.text();
   // Troque ',' por '\t' para separar corretamente as colunas
@@ -549,7 +549,7 @@ startApp();
     });
 
 const PIN_CORRETO = "131208087704";
-const API_URL = "https://script.google.com/macros/s/AKfycbzKwUXw7N8BpzZUEvt_CatMd225ZQY2XIhK-EBAb4DyxXFux13IBP2HHmJ5NX-EXBlQ/exec"; // Substitua pela URL do seu Apps Script
+const API_URL = "https://script.google.com/macros/library/d/1eQqZC9_UY8aeJ69lVyDlgvLPCrV9Gwz0MmytbSz9QnDl5pw6b7QjiKPU/2"; // Substitua pela URL do seu Apps Script
 
 // Botão Editar
 document.getElementById("edit-toggle").onclick = function() {
@@ -747,6 +747,7 @@ async function fetchAndUpdate() {
   
 </body>
 </html>
+
 
 
 
