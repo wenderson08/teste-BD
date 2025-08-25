@@ -207,6 +207,10 @@
       <a href="#team-list"><i class="fas fa-users"></i> Colaboradores</a>
       <a href="#vacation-list"><i class="fas fa-plane"></i> Férias</a>
       <a href="#birthday-list"><i class="fas fa-birthday-cake"></i> Aniversariantes</a>
+      <button id="edit-toggle" class="btn btn-custom">
+      <i class="fas fa-edit"></i> Editar
+</button>
+      
     </nav>
   </header>
   <div class="container" style="padding-top:80px;">
@@ -267,7 +271,8 @@
     // Todos os colaboradores mantidos e exemplo de conflito
     let collaborators = [];
 async function fetchCollaboratorsFromSheet() {
-  const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTjGHhdMJjRUw5vjEnE_x338-gItIqT5i45LxvkmUh65eZnhiwK6VCHXphu3Pp7LvLjnVJWKbE-4fHQ/pub?output=csv";
+  await fetchAndUpdate();
+  const sheetUrl = "https://script.google.com/macros/s/AKfycbzKwUXw7N8BpzZUEvt_CatMd225ZQY2XIhK-EBAb4DyxXFux13IBP2HHmJ5NX-EXBlQ/exec";
   const res = await fetch(sheetUrl);
   const csv = await res.text();
   // Troque ',' por '\t' para separar corretamente as colunas
@@ -542,9 +547,207 @@ startApp();
       document.querySelector("footer").classList.toggle("dark-mode");
       document.querySelector(".container").classList.toggle("dark-mode");
     });
+
+const PIN_CORRETO = "131208087704";
+const API_URL = "SUA_URL_DA_API"; // Substitua pela URL do seu Apps Script
+
+// Botão Editar
+document.getElementById("edit-toggle").onclick = function() {
+  document.getElementById("pin-modal").style.display = "flex";
+  document.getElementById("pin-input").value = "";
+  document.getElementById("pin-error").style.display = "none";
+  document.getElementById("pin-input").focus();
+};
+
+// PIN
+document.getElementById("pin-submit").onclick = function() {
+  if(document.getElementById("pin-input").value === PIN_CORRETO) {
+    document.getElementById("pin-modal").style.display = "none";
+    document.getElementById("edit-modal").style.display = "flex";
+    renderEditList();
+  } else {
+    document.getElementById("pin-error").style.display = "block";
+  }
+};
+document.getElementById("pin-input").onkeydown = function(e) {
+  if(e.key === "Enter") document.getElementById("pin-submit").click();
+};
+
+// Fechar modal edição
+document.getElementById("close-edit").onclick = function() {
+  document.getElementById("edit-modal").style.display = "none";
+};
+
+// Adicionar novo
+document.getElementById("add-new").onclick = function() {
+  document.getElementById("edit-form").reset();
+  document.getElementById("edit-index").value = "";
+  document.getElementById("edit-chave").value = "";
+};
+
+// Salvar (add/edit)
+document.getElementById("edit-form").onsubmit = async function(e) {
+  e.preventDefault();
+  const idx = document.getElementById("edit-index").value;
+  let chave = document.getElementById("edit-chave").value;
+  if(!chave) chave = Date.now().toString(); // Gera chave única
+  const colab = {
+    "Nome completo": document.getElementById("edit-nome").value,
+    "setor": document.getElementById("edit-setor").value,
+    "aniversario": document.getElementById("edit-aniversario").value,
+    "1º periodo de ferias": document.getElementById("edit-vac1").value,
+    "2º periodo de ferias": document.getElementById("edit-vac2").value,
+    "3º periodo de ferias": document.getElementById("edit-vac3").value,
+    "foto": document.getElementById("edit-foto").value,
+    "chave": chave
+  };
+  if(idx) {
+    // Editar
+    await fetch(API_URL, {
+      method: "POST",
+      body: new URLSearchParams({action:"edit", ...colab})
+    });
+  } else {
+    // Adicionar
+    await fetch(API_URL, {
+      method: "POST",
+      body: new URLSearchParams({action:"add", ...colab})
+    });
+  }
+  await fetchAndUpdate();
+  renderEditList();
+  document.getElementById("edit-form").reset();
+  document.getElementById("edit-index").value = "";
+  document.getElementById("edit-chave").value = "";
+};
+
+// Renderizar lista de edição
+async function renderEditList() {
+  await fetchAndUpdate();
+  const ul = document.getElementById("edit-list");
+  ul.innerHTML = collaborators.map((c,i) => `
+    <li style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
+      <span>${c.name} <small style="color:#047562;">(${c.setor})</small></span>
+      <span>
+        <button onclick="editColab(${i})" style="background:none;border:none;color:#047562;"><i class="fas fa-pen"></i></button>
+        <button onclick="removeColab(${i})" style="background:none;border:none;color:#d81c1c;"><i class="fas fa-trash"></i></button>
+      </span>
+    </li>
+  `).join("");
+}
+
+// Editar colaborador
+window.editColab = function(i) {
+  const c = collaborators[i];
+  document.getElementById("edit-index").value = i;
+  document.getElementById("edit-chave").value = c.chave;
+  document.getElementById("edit-nome").value = c.name;
+  document.getElementById("edit-setor").value = c.setor;
+  document.getElementById("edit-aniversario").value = c.birthday;
+  document.getElementById("edit-vac1").value = c.vacations[0]?.start || "";
+  document.getElementById("edit-vac2").value = c.vacations[1]?.start || "";
+  document.getElementById("edit-vac3").value = c.vacations[2]?.start || "";
+  document.getElementById("edit-foto").value = c.photo || "";
+};
+
+// Remover colaborador
+window.removeColab = async function(i) {
+  if(confirm("Remover colaborador?")) {
+    const chave = collaborators[i].chave;
+    await fetch(API_URL, {
+      method: "POST",
+      body: new URLSearchParams({action:"delete", chave})
+    });
+    await fetchAndUpdate();
+    renderEditList();
+  }
+};
+
+// Atualiza colaboradores do backend
+async function fetchAndUpdate() {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({action:"list"})
+  });
+  const data = await res.json();
+  collaborators = data.map(c => ({
+    name: c["Nome completo"] || "",
+    setor: c["setor"] || "",
+    photo: c["foto"] || "",
+    birthday: c["aniversario"] || "",
+    chave: c["chave"] || "",
+    vacations: [
+      c["1º periodo de ferias"] ? {start: c["1º periodo de ferias"], end: c["1º periodo de ferias"]} : null,
+      c["2º periodo de ferias"] ? {start: c["2º periodo de ferias"], end: c["2º periodo de ferias"]} : null,
+      c["3º periodo de ferias"] ? {start: c["3º periodo de ferias"], end: c["3º periodo de ferias"]} : null
+    ].filter(Boolean)
+  }));
+  updateAll();
+}
+
+// --- FIM DA INTERFACE DE EDIÇÃO ---
+    
   </script>
+
+<!-- Modal PIN -->
+<div id="pin-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;max-width:350px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
+    <h4 style="color:#047562;text-align:center;">Digite o PIN de acesso</h4>
+    <input type="password" id="pin-input" class="form-control" style="margin:18px 0;" placeholder="PIN" autofocus>
+    <div id="pin-error" style="color:#d81c1c;text-align:center;display:none;">PIN incorreto!</div>
+    <button id="pin-submit" class="btn btn-custom" style="width:100%;">Entrar</button>
+  </div>
+</div>
+
+<!-- Modal de edição -->
+<div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;max-width:500px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
+    <button id="close-edit" style="position:absolute;top:12px;right:18px;background:none;border:none;font-size:1.5em;color:#047562;"><i class="fas fa-times"></i></button>
+    <h2 style="text-align:center;color:#047562;">Editar Colaboradores</h2>
+    <form id="edit-form">
+      <input type="hidden" id="edit-index">
+      <input type="hidden" id="edit-chave">
+      <div class="mb-2">
+        <label>Nome:</label>
+        <input type="text" id="edit-nome" class="form-control" required>
+      </div>
+      <div class="mb-2">
+        <label>Setor:</label>
+        <input type="text" id="edit-setor" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>Aniversário (dd/mm/aaaa):</label>
+        <input type="text" id="edit-aniversario" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>1º Período de Férias:</label>
+        <input type="text" id="edit-vac1" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>2º Período de Férias:</label>
+        <input type="text" id="edit-vac2" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>3º Período de Férias:</label>
+        <input type="text" id="edit-vac3" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>Foto (URL):</label>
+        <input type="text" id="edit-foto" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-custom" style="width:100%;margin-top:10px;">Salvar</button>
+    </form>
+    <hr>
+    <h4 style="color:#047562;">Colaboradores</h4>
+    <ul id="edit-list" style="max-height:180px;overflow:auto;padding-left:0;"></ul>
+    <button id="add-new" class="btn btn-custom" style="margin-top:10px;width:100%;"><i class="fas fa-plus"></i> Novo Colaborador</button>
+  </div>
+</div>
+
+  
 </body>
 </html>
+
 
 
 
