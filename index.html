@@ -1,0 +1,562 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VEJA BAGAM</title>
+  <link rel="icon" type="Fotos Colaboradores/unnamed.png" href="Fotos Colaboradores/unnamed.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+
+.calendar-day.today {
+  border: 3px solid #dd4a06 !important;
+  box-shadow: 0 0 16px 2px #dd4a06, 0 0 0 px #dd4a06 inset;
+  animation: pulse-today 1.2s infinite alternate;
+  position: relative;
+}
+
+
+.calendar-day.conflict-event {
+      /* Metade feriado, metade aniversário */
+      background: linear-gradient(
+        to right,
+        var(--holiday-bg) 0 50%,
+        #fff7c1 50% 100%
+      ) !important;
+      border: 2px solid var(--holiday-border); /* Nacional */
+      color: var(--holiday-txt);
+      position: relative;
+    }
+    .calendar-day.conflict-event.local-holiday{
+      /* Metade municipal, metade aniversário */
+      background: linear-gradient(
+        to right,
+        #1976d2 0 50%,
+        #ef6c00 50% 100%
+      ) !important;
+      border: 2px solid #89b3dd; /* Municipal */
+      color: #fff;
+    }
+    .calendar-day.conflict-event .fa-birthday-cake {
+      position: absolute;
+      left: 7px;
+      top: 7px;
+      font-size: 1.1em;
+      color: #ef6c00;
+      z-index: 2;
+    }
+    .calendar-day.conflict-event .fa-calendar-day,
+    .calendar-day.conflict-event .fa-holiday {
+      position: absolute;
+      right: 7px;
+      top: 7px;
+      font-size: 1.1em;
+      color: inherit;
+      z-index: 2;
+    }
+
+.conflict {
+  color:var(--conflict-txt)!important;font-weight:bold;background:var(--conflict-bg)!important;
+  padding:7px 13px;border-radius:6px;font-size:1.08rem;margin-bottom:7px;border:2px solid #d81c1c;
+  box-shadow:0 1px 8px #ffebee;display:flex;align-items:center;gap:8px;text-align:center;justify-content:center;width:95%;
+}
+.conflict-sector {
+  color:#856404!important;background:#ffefc7!important;border-color:#ffc107!important;font-weight:bold;
+  padding:7px 13px;border-radius:6px;font-size:1.08rem;margin-bottom:7px;border:2px solid #ffc107;
+  box-shadow:0 1px 8px #fffbe6;display:flex;align-items:center;gap:8px;text-align:center;justify-content:center;width:95%;
+}
+    .calendar-day.local-holiday {
+    background: #1976d2 !important;
+    color: #fff !important;
+    border: 2px solid #89b3dd !important;
+    font-weight: bold;
+    box-shadow: 0 2px 10px #90caf9;
+  }
+  .calendar-day.local-holiday::after {
+    content: "\f133";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    font-size: 1.1em;
+    color: #fff;
+  }
+    :root {
+      --primary: #03642c; --secondary: #047562; --accent: #38d397;
+      --card-bg: #fff; --card-radius: 16px; --shadow: 0 6px 24px rgba(0, 0, 0, 0.377);
+      --header-font: 'Montserrat', 'Poppins', sans-serif; --body-font: 'Poppins', sans-serif;
+      --border: 1px solid #e6e6e6; --conflict-bg: #ffe3e3; --conflict-txt: #d81c1c;
+      --holiday-bg: #ffd6d6; --holiday-border: #d81c1c; --holiday-txt: #b30000;
+      --tooltip-bg: #218355; --tooltip-txt: #fff; --tooltip-radius: 8px;
+    }
+    body {
+      font-family: var(--body-font);
+      /* background:linear-gradient(135deg,var(--primary),var(--secondary)); */
+      background-image: url('https://i.postimg.cc/fLLNZ3w1/Whats-App-Image-2025-08-21-at-18-08-59.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      margin:0;
+      padding:0;
+      color:#202a25;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(33, 134, 67, 0.70); /* verde translúcido, ajuste o alpha se quiser */
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container, header.topbar, .calendar-container, section, footer {
+      position: relative;
+      z-index: 1;
+    }
+    h1 {font-family:var(--header-font);font-size:2.8rem;font-weight:900;letter-spacing:.5px;margin:28px 0 24px 0;border-bottom:4px solid var(--accent);padding-bottom:6px;color:#ffffff;text-align:center;}
+    h2 {font-family:var(--header-font);font-weight:700;font-size:1.6rem;margin:28px 0 16px 0;color:var(--accent);}
+    .filters {display:flex;gap:30px;margin:24px 0 30px 0;flex-wrap:wrap;background:rgba(255,255,255,.22);border-radius:14px;padding:18px 26px;align-items:center;border:2px solid var(--accent);justify-content:center;box-shadow:0 2px 12px rgba(33,134,67,.09);}
+    .filters label {font-family:var(--header-font);font-weight:700;color:var(--primary);display:flex;align-items:center;gap:7px;font-size:1.18rem;}
+    .filters select {border-radius:8px;border:2px solid var(--accent);padding:8px 18px;font-size:1.08rem;background:#f8fbf7;font-family:var(--body-font);box-shadow:0 2px 10px #38d3973d;outline:none;transition:border .2s;}
+    .filters select:focus {border-color:var(--secondary);}
+    .calendar-container {background:rgba(33,134,67,.95);border-radius:18px;padding:35px 28px;box-shadow:var(--shadow);margin-bottom:38px;max-width:700px;margin-left:auto;margin-right:auto;border:2px solid var(--accent);}
+    .calendar-header {display:flex;justify-content:center;align-items:center;margin-bottom:18px;gap:10px;}
+    .calendar-header h2 {flex:1;margin:0;color:#fff;text-align:center;}
+    .calendar-grid {display:grid;grid-template-columns:repeat(7,1fr);gap:7px;text-align:center;margin-top:5px;}
+    .calendar-day {padding:13px 0;border-radius:7px;background:#f8f9fa;font-weight:500;font-size:1.1rem;transition:background .2s;border:1px solid #e6e6e6;position:relative;cursor:pointer;}
+    .calendar-day.header {background:var(--accent);color:#fff;font-weight:bold;font-size:1.05rem;border:none;}
+    .calendar-day.birthday {background:#fff7c1;border:2px solid #ef6c00;font-weight:bold;color:#ef6c00;box-shadow:0 2px 10px #ffe9b4;}
+    .calendar-day.birthday::after {content:"\f1fd";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;right:7px;top:7px;font-size:1.1em;color:#ef6c00;}
+    .calendar-day.holiday {background:var(--holiday-bg);border:2px solid var(--holiday-border);color:var(--holiday-txt);font-weight:bold;box-shadow:0 2px 10px #ffd6d6;}
+    .calendar-day.holiday::after {content:"\f133";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;right:7px;top:7px;font-size:1.1em;color:var(--holiday-txt);}
+    .calendar-day.empty {background:transparent;border:none;box-shadow:none;}
+    /* Tooltip estilizado */
+    .calendar-tooltip {
+      display:none;
+      position:absolute;
+      left:50%;
+      top:-38px;
+      transform:translateX(-50%);
+      background:var(--tooltip-bg);
+      color:var(--tooltip-txt);
+      padding:7px 12px;
+      border-radius:var(--tooltip-radius);
+      font-size:.75rem;
+      font-family:var(--body-font);
+      white-space:nowrap;
+      z-index:10;
+      box-shadow:0 2px 8px rgba(34, 34, 34, 0.533);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .14s,top .14s;
+    }
+    .calendar-day:hover .calendar-tooltip,
+    .calendar-day:focus .calendar-tooltip {
+      display:block;
+      opacity:1;
+      top:-45px;
+    }
+    @media (max-width:600px) {
+      .calendar-tooltip {font-size:.92rem;top:-50px;}
+    }
+    section {background:rgba(255,255,255,.11);border-radius:13px;padding:20px 14px 36px 14px;margin-bottom:32px;box-shadow:var(--shadow);border:1.5px solid var(--accent);}
+    .team-container {display:flex;flex-wrap:wrap;gap:30px;justify-content:center;}
+    .member-card {background:var(--card-bg);border-radius:var(--card-radius);padding:28px 18px 24px 18px;width:260px;box-shadow:0 4px 20px rgba(33,134,67,.14);margin-bottom:20px;display:flex;flex-direction:column;align-items:center;border:2.5px solid var(--accent);transition:transform .16s,box-shadow .16s;}
+    .member-card:hover {transform:translateY(-7px) scale(1.04);box-shadow:0 10px 32px rgba(33,134,67,.17);border-color:#047562;}
+    .member-photo {width:110px;height:110px;object-fit:cover;border-radius:50%;margin-bottom:16px;border:4px solid var(--accent);box-shadow:0 2px 14px #eefbe9;background:#eefbe9;}
+    .member-card h3 {font-family:var(--header-font);font-weight:700;font-size:1.18rem;color:var(--primary);margin-bottom:6px;margin-top:2px;}
+    .member-card p {font-size:1rem;margin:2px 0 7px 0;color:#303d31;font-weight:500;text-align:center;}
+    .member-card .fa-plane-departure {color:#047562;margin-right:5px;}
+    .member-card .fa-birthday-cake {color:#ef6c00;margin-right:5px;}
+    .member-card .fa-user {color:var(--accent);font-size:1.25em;margin-bottom:5px;}
+    .conflict {color:var(--conflict-txt)!important;font-weight:bold;background:var(--conflict-bg)!important;padding:7px 13px;border-radius:6px;font-size:1.08rem;margin-bottom:7px;border:2px solid #d81c1c;box-shadow:0 1px 8px #ffebee;display:flex;align-items:center;gap:8px;text-align:center;justify-content:center;width:95%;}
+    .member-card .fa-exclamation-triangle {color:#d81c1c;}
+    @media (max-width:700px) {.container{padding:10px;}.calendar-container{padding:18px 7px;max-width:97vw;}.team-container{flex-direction:column;align-items:center;}.member-card{width:99vw;padding:16px;}h1{font-size:2.1rem;}}
+    .btn-custom {background:var(--accent);color:#fff;border:none;border-radius:6px;font-weight:600;font-size:1.1rem;padding:9px 21px;transition:background .18s;box-shadow:0 2px 10px #38d3973d;display:inline-flex;align-items:center;gap:8px;}
+    .btn-custom:hover,.btn-custom:focus {background:#047562;color:#fff;outline:none;}
+    header.topbar {position:fixed;top:0;left:0;width:100%;background:#fff;border-bottom:2px solid var(--accent);z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:10px 32px;}
+    header.topbar .logo {height:38px;margin-right:16px;}
+    header.topbar nav a {margin:0 16px;color:var(--primary);font-family:var(--header-font);font-weight:600;text-decoration:none;transition:color .2s;}
+    header.topbar nav a:hover {color:var(--accent);}
+    .dark-mode {background:#222 !important;color:#fff;}
+    .dark-mode .calendar-container, .dark-mode section {background:#333 !important;color:#fff;}
+    .dark-mode h1,.dark-mode h2 {color:#38d397 !important;}
+    .dark-mode .member-card {background:#222;color:#fff;}
+    .dark-mode .filters {background:#2a2a2a;}
+    .dark-mode .filters label {color:#38d397;}
+    .dark-mode .filters select {background:#222;color:#fff;border-color:#38d397;}
+    .dark-toggle {background:var(--accent);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:1.35rem;display:flex;align-items:center;justify-content:center;cursor:pointer;position:fixed;right:30px;bottom:30px;z-index:1100;}
+    footer {text-align:center;padding:18px 0;color:#fff;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:12px;margin-top:30px;}
+    
+  
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div>
+      <img src="https://i.postimg.cc/NG3dNtxk/Vibra-logo.png" alt="Logo" class="logo">  
+    </div>
+   
+    <nav>
+      <a href="#team-list"><i class="fas fa-users"></i> Colaboradores</a>
+      <a href="#vacation-list"><i class="fas fa-plane"></i> Férias</a>
+      <a href="#birthday-list"><i class="fas fa-birthday-cake"></i> Aniversariantes</a>
+    </nav>
+  </header>
+  <div class="container" style="padding-top:80px;">
+    <h1 class="text-center">VEJA BAGAM</h1>
+    <div class="filters">
+      <label><i class="fas fa-calendar-alt" style="color: #ffffff;"></i> Mês: <select id="month-select"></select></label>
+      <label><i class="fas fa-calendar" style="color: #ffffff;"></i> Ano: <select id="year-select"></select></label>
+    </div>
+    
+    <!-- Legenda do calendário -->
+<div class="calendar-legend" style="margin-bottom:14px; display:flex; gap:20px; flex-wrap:wrap; align-items:center; justify-content: center" >
+  <span style="display:flex;align-items:center;gap:7px;">
+    <span style="display:inline-block; width:22px; height:22px; border-radius:7px; background:#ffd6d6; border:2px solid #d81c1c; margin-right:4px;"></span>
+    <span > <h5 style="margin-top: 20px; margin-bottom: 20px; color: white;">Feriado Nacional</h5></span>
+  </span>
+  <span style="display:flex;align-items:center;gap:7px;">
+    <span style="display:inline-block; width:22px; height:22px; border-radius:7px; background:#1976d2; border:2px solid #89b3dd; margin-right:4px;"></span>
+    <span> <h5 style="margin-top: 20px; margin-bottom: 20px; color: white;">Feriado Municipal e Estadual </h5></span>
+  </span>
+  <span style="display:flex;align-items:center;gap:7px;">
+    <span style="display:inline-block; width:22px; height:22px; border-radius:7px; background:#fff7c1; border:2px solid #ef6c00; margin-right:4px;"></span>
+    <span><h5 style="margin-top: 20px; margin-bottom: 20px; color: white;">Aniversário</h5></span>
+  </span>
+  
+  </span>
+</div>
+    
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <button class="btn btn-custom me-2" id="prev-month"><i class="fas fa-chevron-left"></i> Anterior</button>
+        <h2 id="calendar-title"></h2>
+        <button class="btn btn-custom ms-2" id="next-month">Próximo <i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+    <section>
+      <h2 style="color: #ffffff;"><i class="fas fa-plane"></i> Colaboradores de férias no mês</h2>
+      <div id="vacation-list" class="team-container"></div>
+    </section>
+    <section>
+     
+      <h2 style="color: #ffffff;"><i class="fas fa-birthday-cake"></i> Aniversariantes do mês</h2>
+      <div id="birthday-list" class="team-container"></div>
+  
+    </section>
+    <section>
+      <h2 style="color: #ffffff;"><i class="fas fa-users"></i> Todos os colaboradores</h2>
+      <div id="team-list" class="team-container"></div>
+    </section>
+  </div>
+  <footer>
+    AW;Code 2025 - Todos os direitos reservados | <a href="mailto:contato@bagam.com" style="color:#fff;text-decoration:underline;">Contato</a>
+    <img src="Fotos Colaboradores/logo2.png" width="70" height="80">
+  </footer>
+  <script>
+    
+   
+    // Todos os colaboradores mantidos e exemplo de conflito
+    let collaborators = [];
+async function fetchCollaboratorsFromSheet() {
+  const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTjGHhdMJjRUw5vjEnE_x338-gItIqT5i45LxvkmUh65eZnhiwK6VCHXphu3Pp7LvLjnVJWKbE-4fHQ/pub?output=csv";
+  const res = await fetch(sheetUrl);
+  const csv = await res.text();
+  // Troque ',' por '\t' para separar corretamente as colunas
+  const lines = csv.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+  const idxNome = headers.indexOf("nome completo");
+  const idxSetor = headers.indexOf("setor");
+  const idxAniversario = headers.indexOf("aniversario");
+  const idxVac1 = headers.indexOf("1º periodo de ferias");
+  const idxVac2 = headers.indexOf("2º periodo de ferias");
+  const idxVac3 = headers.indexOf("3º periodo de ferias");
+  const idxFoto = headers.indexOf("foto");
+
+  collaborators = lines.slice(1).map(line => {
+    const cols = line.split(',');
+    const vacations = [];
+    if (cols[idxVac1]) vacations.push({start: cols[idxVac1], end: cols[idxVac1]});
+    if (cols[idxVac2]) vacations.push({start: cols[idxVac2], end: cols[idxVac2]});
+    if (cols[idxVac3]) vacations.push({start: cols[idxVac3], end: cols[idxVac3]});
+    return {
+      name: cols[idxNome] || "",
+      setor: cols[idxSetor] || "",
+      photo: (cols[idxFoto] && cols[idxFoto] !== "N/A") ? cols[idxFoto] : "", // se não tiver foto, usa placeholder
+      birthday: cols[idxAniversario] || "",
+      vacations
+    };
+  });
+}
+const localHolidays = [
+      { day: 20, month: 0, year: 2025, name: "São Sebastião – Municipal" },
+      { day: 7, month: 4, year: 2025, name: "Emancipação Política de Guamaré – Municipal" },
+      { day: 15, month: 7, year: 2025, name: "Nossa Senhora dos Navegantes – Municipal" },
+      { day: 3, month: 9, year: 2025, name: "Memória Dos Protomártires de Uruaçu e Cunhaú – Estadual (RN)" },
+      { day: 8, month: 11, year: 2025, name: "Nossa Senhora da Conceição – Municipal" }
+    ];
+    function getLocalHoliday(day, month, year) {
+      return localHolidays.find(h => h.day === day && h.month === month && h.year === year);
+    }
+    const holidays = [
+      { day: 1, month: 0, name: "Confraternização Universal" },
+      { day: 25, month: 1, name: "Carnaval" },
+      { day: 29, month: 2, name: "Paixão de Cristo" },
+      { day: 21, month: 3, name: "Tiradentes" },
+      { day: 1, month: 4, name: "Dia do Trabalho" },
+      { day: 7, month: 8, name: "Independência do Brasil" },
+      { day: 12, month: 9, name: "Nossa Senhora Aparecida" },
+      { day: 2, month: 10, name: "Finados" },
+      { day: 15, month: 10, name: "Proclamação da República" },
+      { day: 20, month: 10, name: "Consciência Negra" },
+      { day: 25, month: 11, name: "Natal" }
+    ];
+    const monthNames = [
+      "Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+    ];
+    function parseDateBR(str) {
+      if (!str) return null;
+      str = str.replace(/-/g, '/');
+      const p = str.split('/');
+      if (p.length < 3) return null;
+      let d, m, y;
+      if (p[0].length === 4) { y = p[0], m = p[1], d = p[2]; }
+      else { d = p[0], m = p[1], y = p[2]; }
+      return new Date(+y, +m-1, +d);
+    }
+    function formatDateBR(str) {
+      if (!str) return "";
+      str = str.replace(/-/g, '/');
+      const p = str.split('/');
+      let d, m, y;
+      if (p.length < 2) return "";
+      if (p.length === 2) { d = p[0], m = p[1], y = null; }
+      else if (p[0].length === 4) { y = p[0], m = p[1], d = p[2]; }
+      else { d = p[0], m = p[1], y = p[2]; }
+      d = d.padStart(2,"0"); m = m.padStart(2,"0");
+      if (y) { if (y.length === 2) y = '20'+y; return `${d}/${m}/${y}`; }
+      return `${d}/${m}`;
+    }
+    function getBirthdayMonth(str) {
+      if (!str) return null;
+      str = str.replace(/-/g, '/');
+      const p = str.split('/');
+      return p[1]?parseInt(p[1],10)-1:null;
+    }
+    function getBirthdayDay(str) {
+      if (!str) return null;
+      str = str.replace(/-/g, '/');
+      const p = str.split('/');
+      return p[0]?parseInt(p[0],10):null;
+    }
+    // Checa se QUALQUER período de férias do colaborador está no mês/ano
+    function isOnVacationInMonth(vacations, month, year) {
+      if (!Array.isArray(vacations)) return false;
+      return vacations.some(v => {
+        if (!v?.start || !v?.end) return false;
+        const s = parseDateBR(v.start), e = parseDateBR(v.end);
+        if (!s || !e) return false;
+        return (s.getFullYear() < year || (s.getFullYear() === year && s.getMonth() <= month)) &&
+               (e.getFullYear() > year || (e.getFullYear() === year && e.getMonth() >= month));
+      });
+    }
+    // Checa se há sobreposição entre QUALQUER período de férias de dois colaboradores
+    function isVacationOverlap(aVac, bVac) {
+      if (!Array.isArray(aVac) || !Array.isArray(bVac)) return false;
+      return aVac.some(a => bVac.some(b => {
+        if (!a?.start || !a?.end || !b?.start || !b?.end) return false;
+        const aS = parseDateBR(a.start), aE = parseDateBR(a.end),
+              bS = parseDateBR(b.start), bE = parseDateBR(b.end);
+        if (!aS || !aE || !bS || !bE) return false;
+        return aS <= bE && aE >= bS;
+      }));
+    }
+    function findVacationConflicts(list, month, year) {
+      const inMonth = list.filter(c => isOnVacationInMonth(c.vacations, month, year));
+      const set = new Set;
+      for (let i = 0; i < inMonth.length; i++)
+        for (let j = i + 1; j < inMonth.length; j++)
+          if (isVacationOverlap(inMonth[i].vacations, inMonth[j].vacations)) {
+            set.add(inMonth[i].name);
+            set.add(inMonth[j].name);
+          }
+      return set;
+    }
+    function findVacationSectorConflicts(list, month, year) {
+      const inMonth = list.filter(c => isOnVacationInMonth(c.vacations, month, year));
+      const setorMap = {}, set = new Set;
+      inMonth.forEach(c => {
+        if (!setorMap[c.setor]) setorMap[c.setor] = [];
+        setorMap[c.setor].push(c);
+      });
+      Object.values(setorMap).forEach(arr => {
+        for (let i = 0; i < arr.length; i++)
+          for (let j = i + 1; j < arr.length; j++)
+            if (isVacationOverlap(arr[i].vacations, arr[j].vacations)) {
+              set.add(arr[i].name);
+              set.add(arr[j].name);
+            }
+      });
+      return set;
+    }
+    const monthSelect = document.getElementById("month-select"), yearSelect = document.getElementById("year-select");
+    for(let i=0;i<12;i++){const opt=document.createElement("option");opt.value=i;opt.textContent=monthNames[i];monthSelect.appendChild(opt);}
+    const currentYear = new Date().getFullYear();
+    for(let y=currentYear;y<=currentYear+2;y++){const opt=document.createElement("option");opt.value=y;opt.textContent=y;yearSelect.appendChild(opt);}
+    let selectedMonth = new Date().getMonth(), selectedYear = new Date().getFullYear();
+    monthSelect.value = selectedMonth; yearSelect.value = selectedYear;
+    document.getElementById("prev-month").onclick=()=>{selectedMonth--;if(selectedMonth<0){selectedMonth=11;selectedYear--;}updateAll();};
+    document.getElementById("next-month").onclick=()=>{selectedMonth++;if(selectedMonth>11){selectedMonth=0;selectedYear++;}updateAll();};
+    monthSelect.onchange=e=>{selectedMonth=parseInt(monthSelect.value,10);updateAll();};
+    yearSelect.onchange=e=>{selectedYear=parseInt(yearSelect.value,10);updateAll();};
+    function renderCalendar() {
+      const calendarTitle = document.getElementById("calendar-title"), calendarGrid = document.getElementById("calendar-grid");
+      calendarTitle.textContent=`${monthNames[selectedMonth]} ${selectedYear}`; calendarGrid.innerHTML="";
+      ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].forEach(day=>{
+        const h=document.createElement("div");
+        h.className="calendar-day header";
+        h.textContent=day;
+        calendarGrid.appendChild(h);
+      });
+      const firstDay=new Date(selectedYear,selectedMonth,1).getDay(),daysInMonth=new Date(selectedYear,selectedMonth+1,0).getDate(),
+        birthdays=collaborators.filter(c=>getBirthdayMonth(c.birthday)===selectedMonth),
+        birthdayDays=birthdays.map(b=>getBirthdayDay(b.birthday));
+      const holidaysInMonth = holidays.filter(h => h.month === selectedMonth);
+      for(let i=0;i<firstDay;i++){
+        const e=document.createElement("div");
+        e.className="calendar-day empty";
+        calendarGrid.appendChild(e);
+      }
+      for(let day=1;day<=daysInMonth;day++){
+        const d=document.createElement("div");
+        d.className = "calendar-day";
+        d.textContent = day;
+        const holiday = holidaysInMonth.find(h=>h.day===day);
+        const localHoliday = getLocalHoliday(day, selectedMonth, selectedYear);
+        const isBirthday = birthdayDays.includes(day);
+        if ((holiday || localHoliday) && isBirthday) {
+          d.classList.add("conflict-event");
+          let tooltipText = "";
+          let holidayIcon = "";
+          if (localHoliday) {
+            d.classList.add("local-holiday");
+            tooltipText = `Aniversário: ${birthdays.filter(b=>getBirthdayDay(b.birthday)===day).map(b=>b.name).join(", ")}<br>Feriado municipal: ${localHoliday.name}`;
+          } else {
+            tooltipText = `Aniversário: ${birthdays.filter(b=>getBirthdayDay(b.birthday)===day).map(b=>b.name).join(", ")}<br>Feriado nacional: ${ holiday.name }`;
+            holidayIcon = `<i class="fa-solid fa-calendar-day"></i>`;
+          }
+          d.innerHTML = `
+            <span style="position: relative;">${day}</span>
+            <i class="fa-solid fa-birthday-cake"></i>
+            ${holidayIcon}
+            <div class="calendar-tooltip">${tooltipText}</div> 
+          `;
+        }
+        else if (localHoliday) {
+          d.classList.add("local-holiday");
+          d.innerHTML = day +
+            `<div class="calendar-tooltip">${localHoliday.name}</div>`;
+        }
+        else if (holiday) {
+          d.className += " holiday";
+          d.innerHTML = day +
+            `<div class="calendar-tooltip">${holiday.name}</div>`;
+        }
+        else if (isBirthday) {
+          d.className += " birthday";
+          const names = birthdays.filter(b=>getBirthdayDay(b.birthday)===day).map(b=>b.name).join(", ");
+          d.innerHTML = day +
+            `<div class="calendar-tooltip">Aniversário: ${names}</div>`;
+        }
+        const isToday = 
+          day === new Date().getDate() &&
+          selectedMonth === new Date().getMonth() &&
+          selectedYear === new Date().getFullYear();
+        if (isToday) {
+          d.classList.add("today");
+          if (d.innerHTML.includes('calendar-tooltip')) {
+            // Se já tem tooltip, só adiciona estrela
+            //d.innerHTML += `<i class="fa-solid fa-star" style="position:absolute;left:5px;bottom:5px;color:#ffeb3b;font-size:1.1em;"></i>`;
+          } else {
+           // d.innerHTML = `<span style="position: relative;">${day}</span><i class="fa-solid fa-star" style="position:absolute;left:5px;bottom:5px;color:#ffeb3b;font-size:1.1em;"></i>`;
+          }
+        }
+        calendarGrid.appendChild(d);
+      }
+    }
+    function renderCollaboratorList(list,container,showVacation,showBirthday,conflicts,sectorConflicts){
+      container.innerHTML=list.length?list.map(colab=>{
+        const photoUrl=colab.photo||"https://via.placeholder.com/120x120?text=Colaborador";
+        return `<div class="member-card">
+          <i class="fas fa-user"></i>
+          <img src="${photoUrl}" alt="${colab.name}" class="member-photo"/>
+          <h3>${colab.name}</h3>
+          <p><strong><i class="fas fa-building"></i> Setor:</strong> ${colab.setor || "N/D"}</p>
+          ${
+            showVacation && Array.isArray(colab.vacations)
+              ? colab.vacations.map((v, idx) =>
+  `<p><i class="fas fa-plane-departure"></i> <strong>${idx+1}º período:</strong> ${formatDateBR(v.start)} a ${formatDateBR(v.end)}</p>`
+).join("")
+              : ""
+          }
+          ${
+            sectorConflicts && sectorConflicts.has(colab.name)
+              ? `<p class="conflict" style="background:#ffefc7;color:#856404;border-color:#ffc107;"><i class="fas fa-exclamation-triangle"></i> Alerta: Conflito de férias no setor!</p>`
+              : ""
+          }
+          ${
+            showBirthday && colab.birthday
+              ? `<p><i class="fas fa-birthday-cake"></i> Aniversário: ${formatDateBR(colab.birthday)}</p>`
+              : ""
+          }
+        </div>`;
+      }).join(""):"<p>Nenhum colaborador encontrado.</p>";
+    }
+    function updateAll(){
+      renderCalendar();
+      const vacationList=collaborators.filter(c=>isOnVacationInMonth(c.vacations,selectedMonth,selectedYear)),
+        birthdayList=collaborators.filter(c=>getBirthdayMonth(c.birthday)===selectedMonth),
+        conflicts=findVacationConflicts(collaborators,selectedMonth,selectedYear),
+        sectorConflicts=findVacationSectorConflicts(collaborators,selectedMonth,selectedYear);
+      renderCollaboratorList(vacationList,document.getElementById("vacation-list"),true,false,conflicts,sectorConflicts);
+      renderCollaboratorList(birthdayList,document.getElementById("birthday-list"),false,true,null,sectorConflicts);
+      renderCollaboratorList(collaborators.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')),document.getElementById("team-list"),true,true,conflicts,sectorConflicts);
+    }
+   async function startApp() {
+  await fetchCollaboratorsFromSheet();
+  updateAll();
+}
+startApp();
+
+    document.getElementById("toggleDark")?.addEventListener("click",function(){
+      document.body.classList.toggle("dark-mode");
+      document.querySelector("footer").classList.toggle("dark-mode");
+      document.querySelector(".container").classList.toggle("dark-mode");
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
