@@ -325,459 +325,180 @@
 </div>
 
  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-   
-    // Todos os colaboradores mantidos e exemplo de conflito
-    let collaborators = [];
-    const PIN_CORRETO = "131208087704";
-    const API_URL = "https://script.google.com/macros/s/AKfycbzKwUXw7N8BpzZUEvt_CatMd225ZQY2XIhK-EBAb4DyxXFux13IBP2HHmJ5NX-EXBlQ/exec";
-async function fetchCollaboratorsFromSheet() {
-  await fetchAndUpdate();
-  };
-  
-const localHolidays = [
-      { day: 20, month: 0, year: 2025, name: "São Sebastião – Municipal" },
-      { day: 7, month: 4, year: 2025, name: "Emancipação Política de Guamaré – Municipal" },
-      { day: 15, month: 7, year: 2025, name: "Nossa Senhora dos Navegantes – Municipal" },
-      { day: 3, month: 9, year: 2025, name: "Memória Dos Protomártires de Uruaçu e Cunhaú – Estadual (RN)" },
-      { day: 8, month: 11, year: 2025, name: "Nossa Senhora da Conceição – Municipal" }
-    ];
-    function getLocalHoliday(day, month, year) {
-      return localHolidays.find(h => h.day === day && h.month === month && h.year === year);
-    }
-    const holidays = [
-      { day: 1, month: 0, name: "Confraternização Universal" },
-      { day: 25, month: 1, name: "Carnaval" },
-      { day: 29, month: 2, name: "Paixão de Cristo" },
-      { day: 21, month: 3, name: "Tiradentes" },
-      { day: 1, month: 4, name: "Dia do Trabalho" },
-      { day: 7, month: 8, name: "Independência do Brasil" },
-      { day: 12, month: 9, name: "Nossa Senhora Aparecida" },
-      { day: 2, month: 10, name: "Finados" },
-      { day: 15, month: 10, name: "Proclamação da República" },
-      { day: 20, month: 10, name: "Consciência Negra" },
-      { day: 25, month: 11, name: "Natal" }
-    ];
-    const monthNames = [
-      "Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
-    ];
-    function parseDateBR(str) {
-      if (!str) return null;
-      str = str.replace(/-/g, '/');
-      const p = str.split('/');
-      if (p.length < 3) return null;
-      let d, m, y;
-      if (p[0].length === 4) { y = p[0], m = p[1], d = p[2]; }
-      else { d = p[0], m = p[1], y = p[2]; }
-      return new Date(+y, +m-1, +d);
-    }
-    function formatDateBR(str) {
-      if (!str) return "";
-      str = str.replace(/-/g, '/');
-      const p = str.split('/');
-      let d, m, y;
-      if (p.length < 2) return "";
-      if (p.length === 2) { d = p[0], m = p[1], y = null; }
-      else if (p[0].length === 4) { y = p[0], m = p[1], d = p[2]; }
-      else { d = p[0], m = p[1], y = p[2]; }
-      d = d.padStart(2,"0"); m = m.padStart(2,"0");
-      if (y) { if (y.length === 2) y = '20'+y; return `${d}/${m}/${y}`; }
-      return `${d}/${m}`;
-    }
-    function getBirthdayMonth(str) {
-      if (!str) return null;
-      str = str.replace(/-/g, '/');
-      const p = str.split('/');
-      return p[1]?parseInt(p[1],10)-1:null;
-    }
-    function getBirthdayDay(str) {
-      if (!str) return null;
-      str = str.replace(/-/g, '/');
-      const p = str.split('/');
-      return p[0]?parseInt(p[0],10):null;
-    }
-    // Checa se QUALQUER período de férias do colaborador está no mês/ano
-    function isOnVacationInMonth(vacations, month, year) {
-      if (!Array.isArray(vacations)) return false;
-      return vacations.some(v => {
-        if (!v?.start || !v?.end) return false;
-        const s = parseDateBR(v.start), e = parseDateBR(v.end);
-        if (!s || !e) return false;
-        return (s.getFullYear() < year || (s.getFullYear() === year && s.getMonth() <= month)) &&
-               (e.getFullYear() > year || (e.getFullYear() === year && e.getMonth() >= month));
-      });
-    }
-    // Checa se há sobreposição entre QUALQUER período de férias de dois colaboradores
-    function isVacationOverlap(aVac, bVac) {
-      if (!Array.isArray(aVac) || !Array.isArray(bVac)) return false;
-      return aVac.some(a => bVac.some(b => {
-        if (!a?.start || !a?.end || !b?.start || !b?.end) return false;
-        const aS = parseDateBR(a.start), aE = parseDateBR(a.end),
-              bS = parseDateBR(b.start), bE = parseDateBR(b.end);
-        if (!aS || !aE || !bS || !bE) return false;
-        return aS <= bE && aE >= bS;
-      }));
-    }
-    function findVacationConflicts(list, month, year) {
-      const inMonth = list.filter(c => isOnVacationInMonth(c.vacations, month, year));
-      const set = new Set;
-      for (let i = 0; i < inMonth.length; i++)
-        for (let j = i + 1; j < inMonth.length; j++)
-          if (isVacationOverlap(inMonth[i].vacations, inMonth[j].vacations)) {
-            set.add(inMonth[i].name);
-            set.add(inMonth[j].name);
-          }
-      return set;
-    }
-    function findVacationSectorConflicts(list, month, year) {
-      const inMonth = list.filter(c => isOnVacationInMonth(c.vacations, month, year));
-      const setorMap = {}, set = new Set;
-      inMonth.forEach(c => {
-        if (!setorMap[c.setor]) setorMap[c.setor] = [];
-        setorMap[c.setor].push(c);
-      });
-      Object.values(setorMap).forEach(arr => {
-        for (let i = 0; i < arr.length; i++)
-          for (let j = i + 1; j < arr.length; j++)
-            if (isVacationOverlap(arr[i].vacations, arr[j].vacations)) {
-              set.add(arr[i].name);
-              set.add(arr[j].name);
-            }
-      });
-      return set;
-    }
-    const monthSelect = document.getElementById("month-select"), yearSelect = document.getElementById("year-select");
-    for(let i=0;i<12;i++){const opt=document.createElement("option");opt.value=i;opt.textContent=monthNames[i];monthSelect.appendChild(opt);}
-    const currentYear = new Date().getFullYear();
-    for(let y=currentYear;y<=currentYear+2;y++){const opt=document.createElement("option");opt.value=y;opt.textContent=y;yearSelect.appendChild(opt);}
-    let selectedMonth = new Date().getMonth(), selectedYear = new Date().getFullYear();
-    monthSelect.value = selectedMonth; yearSelect.value = selectedYear;
-    document.getElementById("prev-month").onclick=()=>{selectedMonth--;if(selectedMonth<0){selectedMonth=11;selectedYear--;}updateAll();};
-    document.getElementById("next-month").onclick=()=>{selectedMonth++;if(selectedMonth>11){selectedMonth=0;selectedYear++;}updateAll();};
-    monthSelect.onchange=e=>{selectedMonth=parseInt(monthSelect.value,10);updateAll();};
-    yearSelect.onchange=e=>{selectedYear=parseInt(yearSelect.value,10);updateAll();};
-    function renderCalendar() {
-      const calendarTitle = document.getElementById("calendar-title"), calendarGrid = document.getElementById("calendar-grid");
-      calendarTitle.textContent=`${monthNames[selectedMonth]} ${selectedYear}`; calendarGrid.innerHTML="";
-      ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].forEach(day=>{
-        const h=document.createElement("div");
-        h.className="calendar-day header";
-        h.textContent=day;
-        calendarGrid.appendChild(h);
-      });
-      const firstDay=new Date(selectedYear,selectedMonth,1).getDay(),daysInMonth=new Date(selectedYear,selectedMonth+1,0).getDate(),
-        birthdays=collaborators.filter(c=>getBirthdayMonth(c.birthday)===selectedMonth),
-        birthdayDays=birthdays.map(b=>getBirthdayDay(b.birthday));
-      const holidaysInMonth = holidays.filter(h => h.month === selectedMonth);
-      for(let i=0;i<firstDay;i++){
-        const e=document.createElement("div");
-        e.className="calendar-day empty";
-        calendarGrid.appendChild(e);
-      }
-      for(let day=1;day<=daysInMonth;day++){
-        const d=document.createElement("div");
-        d.className = "calendar-day";
-        d.textContent = day;
-        const holiday = holidaysInMonth.find(h=>h.day===day);
-        const localHoliday = getLocalHoliday(day, selectedMonth, selectedYear);
-        const isBirthday = birthdayDays.includes(day);
-        if ((holiday || localHoliday) && isBirthday) {
-          d.classList.add("conflict-event");
-          let tooltipText = "";
-          let holidayIcon = "";
-          if (localHoliday) {
-            d.classList.add("local-holiday");
-            tooltipText = `Aniversário: ${birthdays.filter(b=>getBirthdayDay(b.birthday)===day).map(b=>b.name).join(", ")}<br>Feriado municipal: ${localHoliday.name}`;
-          } else {
-            tooltipText = `Aniversário: ${birthdays.filter(b=>getBirthdayDay(b.birthday)===day).map(b=>b.name).join(", ")}<br>Feriado nacional: ${ holiday.name }`;
-            holidayIcon = `<i class="fa-solid fa-calendar-day"></i>`;
-          }
-          d.innerHTML = `
-            <span style="position: relative;">${day}</span>
-            <i class="fa-solid fa-birthday-cake"></i>
-            ${holidayIcon}
-            <div class="calendar-tooltip">${tooltipText}</div> 
-          `;
-        }
-        else if (localHoliday) {
-          d.classList.add("local-holiday");
-          d.innerHTML = day +
-            `<div class="calendar-tooltip">${localHoliday.name}</div>`;
-        }
-        else if (holiday) {
-          d.className += " holiday";
-          d.innerHTML = day +
-            `<div class="calendar-tooltip">${holiday.name}</div>`;
-        }
-        else if (isBirthday) {
-          d.className += " birthday";
-          const names = birthdays.filter(b=>getBirthdayDay(b.birthday)===day).map(b=>b.name).join(", ");
-          d.innerHTML = day +
-            `<div class="calendar-tooltip">Aniversário: ${names}</div>`;
-        }
-        const isToday = 
-          day === new Date().getDate() &&
-          selectedMonth === new Date().getMonth() &&
-          selectedYear === new Date().getFullYear();
-        if (isToday) {
-          d.classList.add("today");
-          if (d.innerHTML.includes('calendar-tooltip')) {
-            // Se já tem tooltip, só adiciona estrela
-            //d.innerHTML += `<i class="fa-solid fa-star" style="position:absolute;left:5px;bottom:5px;color:#ffeb3b;font-size:1.1em;"></i>`;
-          } else {
-           // d.innerHTML = `<span style="position: relative;">${day}</span><i class="fa-solid fa-star" style="position:absolute;left:5px;bottom:5px;color:#ffeb3b;font-size:1.1em;"></i>`;
-          }
-        }
-        calendarGrid.appendChild(d);
-      }
-    }
-    function renderCollaboratorList(list,container,showVacation,showBirthday,conflicts,sectorConflicts){
-      container.innerHTML=list.length?list.map(colab=>{
-        const photoUrl=colab.photo||"https://via.placeholder.com/120x120?text=Colaborador";
-        return `<div class="member-card">
-          <i class="fas fa-user"></i>
-          <img src="${photoUrl}" alt="${colab.name}" class="member-photo"/>
-          <h3>${colab.name}</h3>
-          <p><strong><i class="fas fa-building"></i> Setor:</strong> ${colab.setor || "N/D"}</p>
-          ${
-            showVacation && Array.isArray(colab.vacations)
-              ? colab.vacations.map((v, idx) =>
-  `<p><i class="fas fa-plane-departure"></i> <strong>${idx+1}º período:</strong> ${formatDateBR(v.start)} a ${formatDateBR(v.end)}</p>`
-).join("")
-              : ""
-          }
-          ${
-            sectorConflicts && sectorConflicts.has(colab.name)
-              ? `<p class="conflict" style="background:#ffefc7;color:#856404;border-color:#ffc107;"><i class="fas fa-exclamation-triangle"></i> Alerta: Conflito de férias no setor!</p>`
-              : ""
-          }
-          ${
-            showBirthday && colab.birthday
-              ? `<p><i class="fas fa-birthday-cake"></i> Aniversário: ${formatDateBR(colab.birthday)}</p>`
-              : ""
-          }
-        </div>`;
-      }).join(""):"<p>Nenhum colaborador encontrado.</p>";
-    }
-    function updateAll(){
-      renderCalendar();
-      const vacationList=collaborators.filter(c=>isOnVacationInMonth(c.vacations,selectedMonth,selectedYear)),
-        birthdayList=collaborators.filter(c=>getBirthdayMonth(c.birthday)===selectedMonth),
-        conflicts=findVacationConflicts(collaborators,selectedMonth,selectedYear),
-        sectorConflicts=findVacationSectorConflicts(collaborators,selectedMonth,selectedYear);
-      renderCollaboratorList(vacationList,document.getElementById("vacation-list"),true,false,conflicts,sectorConflicts);
-      renderCollaboratorList(birthdayList,document.getElementById("birthday-list"),false,true,null,sectorConflicts);
-      renderCollaboratorList(collaborators.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')),document.getElementById("team-list"),true,true,conflicts,sectorConflicts);
-    }
-   async function startApp() {
-  await fetchCollaboratorsFromSheet();
-  updateAll();
-}
-startApp();
+   document.addEventListener("DOMContentLoaded", function() {
+  // CONFIGURAÇÕES
+  const API_URL = "https://script.google.com/macros/s/AKfycbzKwUXw7N8BpzZUEvt_CatMd225ZQY2XIhK-EBAb4DyxXFux13IBP2HHmJ5NX-EXBlQ/exec";
+  const PIN_CORRETO = "131208087704";
+  let colaboradores = [];
 
-    document.getElementById("toggleDark")?.addEventListener("click",function(){
-      document.body.classList.toggle("dark-mode");
-      document.querySelector("footer").classList.toggle("dark-mode");
-      document.querySelector(".container").classList.toggle("dark-mode");
+  // ---- CRUD ----
+  async function fetchColaboradores() {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: new URLSearchParams({action:"list"})
     });
-
- // Substitua pela URL do seu Apps Script
-
-// Botão Editar
-document.getElementById("edit-toggle").onclick = function() {
-  document.getElementById("pin-modal").style.display = "flex";
-  document.getElementById("pin-input").value = "";
-  document.getElementById("pin-error").style.display = "none";
-  document.getElementById("pin-input").focus();
-};
-
-// PIN
-document.getElementById("pin-submit").onclick = function() {
-  if(document.getElementById("pin-input").value === PIN_CORRETO) {
-    document.getElementById("pin-modal").style.display = "none";
-    document.getElementById("edit-modal").style.display = "flex";
+    const data = await res.json();
+    colaboradores = data.map((c) => ({
+      nome: c["Nome completo"] || "",
+      setor: c["setor"] || "",
+      aniversario: c["aniversario"] || "",
+      vac1: c["1º periodo de ferias"] || "",
+      vac2: c["2º periodo de ferias"] || "",
+      vac3: c["3º periodo de ferias"] || "",
+      foto: c["foto"] || "",
+      chave: c["chave"] || ""
+    }));
     renderEditList();
-  } else {
-    document.getElementById("pin-error").style.display = "block";
+    renderColaboradores();
   }
-};
-document.getElementById("pin-input").onkeydown = function(e) {
-  if(e.key === "Enter") document.getElementById("pin-submit").click();
-};
 
-// Fechar modal edição
-document.getElementById("close-edit").onclick = function() {
-  document.getElementById("edit-modal").style.display = "none";
-};
-document.getElementById("edit-form").onsubmit = async function(e) {
-  e.preventDefault();
-  const idx = document.getElementById("edit-index").value;
-  let chave = document.getElementById("edit-chave").value;
-  if (!chave) chave = Date.now().toString(); // Gera chave única
-
-  const colab = {
-    "Nome completo": document.getElementById("edit-nome").value,
-    "setor": document.getElementById("edit-setor").value,
-    "aniversario": document.getElementById("edit-aniversario").value,
-    "1º periodo de ferias": document.getElementById("edit-vac1").value,
-    "2º periodo de ferias": document.getElementById("edit-vac2").value,
-    "3º periodo de ferias": document.getElementById("edit-vac3").value,
-    "foto": document.getElementById("edit-foto").value,
-    "chave": chave
-  };
-
-  let response, result;
-  try {
+  async function saveColaborador(e) {
+    e.preventDefault();
+    const idx = document.getElementById("edit-index").value;
+    let chave = document.getElementById("edit-chave").value || Date.now().toString();
+    const colab = {
+      "Nome completo": document.getElementById("edit-nome").value,
+      "setor": document.getElementById("edit-setor").value,
+      "aniversario": document.getElementById("edit-aniversario").value,
+      "1º periodo de ferias": document.getElementById("edit-vac1").value,
+      "2º periodo de ferias": document.getElementById("edit-vac2").value,
+      "3º periodo de ferias": document.getElementById("edit-vac3").value,
+      "foto": document.getElementById("edit-foto").value,
+      "chave": chave
+    };
+    let response, result;
     if (idx === "") {
-      // Adicionar novo colaborador
       response = await fetch(API_URL, {
         method: "POST",
-        body: new URLSearchParams({ action: "add", ...colab })
+        body: new URLSearchParams({action:"add", ...colab})
       });
     } else {
-      // Editar colaborador existente
       response = await fetch(API_URL, {
         method: "POST",
-        body: new URLSearchParams({ action: "edit", ...colab })
+        body: new URLSearchParams({action:"edit", ...colab})
       });
     }
     result = await response.json();
-    console.log("Resposta do backend:", result);
-
-    if (result.status !== "OK" && !Array.isArray(result)) {
-      alert("Erro ao salvar colaborador! Tente novamente.");
-      return;
+    if (result.status === "OK" || Array.isArray(result)) {
+      await fetchColaboradores();
+      closeModalEdit();
+      alert("Colaborador salvo com sucesso!");
+    } else {
+      alert("Erro ao salvar colaborador!");
     }
-  } catch (err) {
-    console.error("Erro no salvamento:", err);
-    alert("Erro de comunicação com o servidor.");
-    return;
   }
 
-  await fetchAndUpdate();
-  renderEditList();
-  document.getElementById("edit-form").reset();
-  document.getElementById("edit-index").value = "";
-  document.getElementById("edit-chave").value = "";
-  alert("Colaborador salvo com sucesso!");
-};
-// Adicionar novo
-document.getElementById("add-new").onclick = function() {
-  document.getElementById("edit-form").reset();
-  document.getElementById("edit-index").value = "";
-  document.getElementById("edit-chave").value = "";
-};
-
-// Salvar (add/edit)
-document.getElementById("edit-form").onsubmit = async function(e) {
-  e.preventDefault();
-  const idx = document.getElementById("edit-index").value;
-  let chave = document.getElementById("edit-chave").value;
-  if(!chave) chave = Date.now().toString(); // Gera chave única
-  const colab = {
-    "Nome completo": document.getElementById("edit-nome").value,
-    "setor": document.getElementById("edit-setor").value,
-    "aniversario": document.getElementById("edit-aniversario").value,
-    "1º periodo de ferias": document.getElementById("edit-vac1").value,
-    "2º periodo de ferias": document.getElementById("edit-vac2").value,
-    "3º periodo de ferias": document.getElementById("edit-vac3").value,
-    "foto": document.getElementById("edit-foto").value,
-    "chave": chave
-  };
-  if(idx) {
-    // Editar
-    await fetch(API_URL, {
-      method: "POST",
-      body: new URLSearchParams({action:"edit", ...colab})
-    });
-  } else {
-    // Adicionar
-    await fetch(API_URL, {
-      method: "POST",
-      body: new URLSearchParams({action:"add", ...colab})
-    });
-  }
-  await fetchAndUpdate();
-  renderEditList();
-  document.getElementById("edit-form").reset();
-  document.getElementById("edit-index").value = "";
-  document.getElementById("edit-chave").value = "";
-};
-
-// Renderizar lista de edição
-async function renderEditList() {
-  await fetchAndUpdate();
-  const ul = document.getElementById("edit-list");
-  ul.innerHTML = collaborators.map((c,i) => `
-    <li style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
-      <span>${c.name} <small style="color:#047562;">(${c.setor})</small></span>
-      <span>
-        <button onclick="editColab(${i})" style="background:none;border:none;color:#047562;"><i class="fas fa-pen"></i></button>
-        <button onclick="removeColab(${i})" style="background:none;border:none;color:#d81c1c;"><i class="fas fa-trash"></i></button>
-      </span>
-    </li>
-  `).join("");
-}
-
-// Editar colaborador
-window.editColab = function(i) {
-  const c = collaborators[i];
-  
-  document.getElementById("edit-index").value = i;
-  document.getElementById("edit-chave").value = c.chave;
-  document.getElementById("edit-nome").value = c.name;
-  document.getElementById("edit-setor").value = c.setor;
-  document.getElementById("edit-aniversario").value = c.birthday;
-  document.getElementById("edit-vac1").value = c.vacations[0]?.start || "";
-  document.getElementById("edit-vac2").value = c.vacations[1]?.start || "";
-  document.getElementById("edit-vac3").value = c.vacations[2]?.start || "";
-  document.getElementById("edit-foto").value = c.photo || "";
-};
-
-// Remover colaborador
-window.removeColab = async function(i) {
-  if(confirm("Remover colaborador?")) {
-    const chave = collaborators[i].chave;
-    await fetch(API_URL, {
+  async function removeColaborador(idx) {
+    if (!confirm("Remover colaborador?")) return;
+    const chave = colaboradores[idx].chave;
+    const response = await fetch(API_URL, {
       method: "POST",
       body: new URLSearchParams({action:"delete", chave})
     });
-    await fetchAndUpdate();
-    renderEditList();
+    const result = await response.json();
+    if (result.status === "OK") {
+      await fetchColaboradores();
+    } else {
+      alert("Erro ao remover colaborador!");
+    }
   }
-};
 
-// Atualiza colaboradores do backend
-async function fetchAndUpdate() {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({action:"list"})
-  });
-  const data = await res.json();
-  collaborators = data.map(c => ({
-    name: c["Nome completo"] || "",
-    setor: c["setor"] || "",
-    photo: c["foto"] || "",
-    birthday: c["aniversario"] || "",
-    chave: c["chave"] || "",
-    vacations: [
-      c["1º periodo de ferias"] ? {start: c["1º periodo de ferias"], end: c["1º periodo de ferias"]} : null,
-      c["2º periodo de ferias"] ? {start: c["2º periodo de ferias"], end: c["2º periodo de ferias"]} : null,
-      c["3º periodo de ferias"] ? {start: c["3º periodo de ferias"], end: c["3º periodo de ferias"]} : null
-    ].filter(Boolean)
-  }));
-  updateAll();
-}
+  function openModalEdit(colab = null, idx = "") {
+    document.getElementById("edit-modal").style.display = "flex";
+    if (colab) {
+      document.getElementById("edit-nome").value = colab.nome;
+      document.getElementById("edit-setor").value = colab.setor;
+      document.getElementById("edit-aniversario").value = colab.aniversario;
+      document.getElementById("edit-vac1").value = colab.vac1;
+      document.getElementById("edit-vac2").value = colab.vac2;
+      document.getElementById("edit-vac3").value = colab.vac3;
+      document.getElementById("edit-foto").value = colab.foto;
+      document.getElementById("edit-chave").value = colab.chave;
+      document.getElementById("edit-index").value = idx;
+    } else {
+      document.getElementById("edit-form").reset();
+      document.getElementById("edit-index").value = "";
+      document.getElementById("edit-chave").value = "";
+    }
+  }
+  function closeModalEdit() {
+    document.getElementById("edit-modal").style.display = "none";
+    document.getElementById("edit-form").reset();
+    document.getElementById("edit-index").value = "";
+    document.getElementById("edit-chave").value = "";
+  }
 
-// --- FIM DA INTERFACE DE EDIÇÃO ---
+  // MODAL PIN
+  document.getElementById("edit-toggle").onclick = function() {
+    document.getElementById("pin-modal").style.display = "flex";
+    document.getElementById("pin-input").value = "";
+    document.getElementById("pin-error").style.display = "none";
+    document.getElementById("pin-input").focus();
+  };
   document.getElementById("close-pin").onclick = function() {
-  document.getElementById("pin-modal").style.display = "none";
-};  
-});
-      
+    document.getElementById("pin-modal").style.display = "none";
+  };
+  document.getElementById("pin-submit").onclick = function() {
+    if(document.getElementById("pin-input").value === PIN_CORRETO) {
+      document.getElementById("pin-modal").style.display = "none";
+      document.getElementById("edit-modal").style.display = "flex";
+      renderEditList();
+    } else {
+      document.getElementById("pin-error").style.display = "block";
+    }
+  };
+  document.getElementById("pin-input").onkeydown = function(e) {
+    if(e.key === "Enter") document.getElementById("pin-submit").click();
+  };
+
+  document.getElementById("close-edit").onclick = closeModalEdit;
+  document.getElementById("add-new").onclick = function() {
+    openModalEdit();
+  };
+  document.getElementById("edit-form").onsubmit = saveColaborador;
+
+  function renderEditList() {
+    const ul = document.getElementById("edit-list");
+    ul.innerHTML = colaboradores.map((c,i) => `
+      <li style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
+        <span>${c.nome} <small style="color:#047562;">(${c.setor})</small></span>
+        <span>
+          <button onclick="window.editColaborador(${i})" style="background:none;border:none;color:#047562;"><i class="fas fa-pen"></i></button>
+          <button onclick="window.excluirColaborador(${i})" style="background:none;border:none;color:#d81c1c;"><i class="fas fa-trash"></i></button>
+        </span>
+      </li>
+    `).join("");
+  }
+  window.editColaborador = function(i) {
+    openModalEdit(colaboradores[i], i);
+  };
+  window.excluirColaborador = function(i) {
+    removeColaborador(i);
+  };
+
+  function renderColaboradores() {
+    const teamList = document.getElementById("team-list");
+    if (!teamList) return;
+    teamList.innerHTML = colaboradores.map((c) => `
+      <div class="member-card">
+        <img src="${c.foto || "https://via.placeholder.com/120x120?text=Colaborador"}" alt="${c.nome}" class="member-photo"/>
+        <h3>${c.nome}</h3>
+        <p><strong>Setor:</strong> ${c.setor}</p>
+        <p><strong>Aniversário:</strong> ${c.aniversario}</p>
+        <p><strong>1º Férias:</strong> ${c.vac1}</p>
+        <p><strong>2º Férias:</strong> ${c.vac2}</p>
+        <p><strong>3º Férias:</strong> ${c.vac3}</p>
+      </div>
+    `).join("");
+  }
+
+  // Inicialização
+  fetchColaboradores();
+}); 
   </script> 
 </body>
 </html>
+
 
 
 
