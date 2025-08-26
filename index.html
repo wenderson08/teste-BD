@@ -331,6 +331,23 @@
     let collaborators = [];
     const PIN_CORRETO = "131208087704";
     const API_URL = "https://script.google.com/macros/s/AKfycbzKwUXw7N8BpzZUEvt_CatMd225ZQY2XIhK-EBAb4DyxXFux13IBP2HHmJ5NX-EXBlQ/exec";
+
+async function apiPost(params) {
+  console.log("API request:", params);
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams(params)
+  });
+  const text = await res.text();
+  console.log("API raw response:", res.status, text);
+  if (!res.ok) throw new Error("HTTP " + res.status + " - " + text);
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    // resposta não-JSON (útil para debug)
+    throw new Error("API retornou texto inválido como JSON: " + text);
+  }
+}
 async function fetchCollaboratorsFromSheet() {
   await fetchAndUpdate();
   };
@@ -613,39 +630,35 @@ document.getElementById("close-edit").onclick = function() {
 
 
 document.getElementById("edit-form").onsubmit = async function(e) {
-    e.preventDefault();
-    const idx = document.getElementById("edit-index").value;
-    let chave = document.getElementById("edit-chave").value;
-    if (!chave) chave = Date.now().toString(); // Gera chave única
-    const colab = {
-      "Nome completo": document.getElementById("edit-nome").value,
-      "setor": document.getElementById("edit-setor").value,
-      "aniversario": document.getElementById("edit-aniversario").value,
-      "1º periodo de ferias": document.getElementById("edit-vac1").value,
-      "2º periodo de ferias": document.getElementById("edit-vac2").value,
-      "3º periodo de ferias": document.getElementById("edit-vac3").value,
-      "foto": document.getElementById("edit-foto").value,
-      "chave": chave
-    };
-    try {
-      const action = idx ? "edit" : "add";
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: new URLSearchParams({ action, ...colab })
-      });
-      const json = await res.json();
-      console.log("Resposta API:", json);
-      if (json.status && json.status !== "OK") throw new Error("Erro no backend: " + JSON.stringify(json));
-      await fetchAndUpdate();
-      renderEditList();
-      document.getElementById("edit-form").reset();
-      document.getElementById("edit-index").value = "";
-      document.getElementById("edit-chave").value = "";
-      alert("Colaborador salvo com sucesso!");
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar. Veja console e logs do Apps Script.");
-    }
+  e.preventDefault();
+  const idx = document.getElementById("edit-index").value;
+  let chave = document.getElementById("edit-chave").value;
+  if (!chave) chave = Date.now().toString();
+  const colab = {
+    "Nome completo": document.getElementById("edit-nome").value,
+    "setor": document.getElementById("edit-setor").value,
+    "aniversario": document.getElementById("edit-aniversario").value,
+    "1º periodo de ferias": document.getElementById("edit-vac1").value,
+    "2º periodo de ferias": document.getElementById("edit-vac2").value,
+    "3º periodo de ferias": document.getElementById("edit-vac3").value,
+    "foto": document.getElementById("edit-foto").value,
+    "chave": chave
+  };
+  try {
+    const action = idx ? "edit" : "add";
+    const json = await apiPost({ action, ...colab });
+    console.log("Resposta API JSON:", json);
+    if (!json || json.status !== "OK") throw new Error("Backend: " + JSON.stringify(json));
+    await fetchAndUpdate();
+    renderEditList();
+    document.getElementById("edit-form").reset();
+    document.getElementById("edit-index").value = "";
+    document.getElementById("edit-chave").value = "";
+    alert("Colaborador salvo com sucesso!");
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao salvar. Veja console e logs do Apps Script.");
+  }
 };
 
   
@@ -690,37 +703,42 @@ window.editColab = function(i) {
 
 // Remover colaborador
 window.removeColab = async function(i) {
-  if(confirm("Remover colaborador?")) {
+  if (confirm("Remover colaborador?")) {
     const chave = collaborators[i].chave;
-    await fetch(API_URL, {
-      method: "POST",
-      body: new URLSearchParams({action:"delete", chave})
-    });
-    await fetchAndUpdate();
-    renderEditList();
+    try {
+      const json = await apiPost({ action: "delete", chave });
+      console.log("delete:", json);
+      await fetchAndUpdate();
+      renderEditList();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao remover. Veja console e logs do Apps Script.");
+    }
   }
 };
 
 // Atualiza colaboradores do backend
 async function fetchAndUpdate() {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({action:"list"})
-  });
-  const data = await res.json();
-  collaborators = data.map(c => ({
-    name: c["Nome completo"] || "",
-    setor: c["setor"] || "",
-    photo: c["foto"] || "",
-    birthday: c["aniversario"] || "",
-    chave: c["chave"] || "",
-    vacations: [
-      c["1º periodo de ferias"] ? {start: c["1º periodo de ferias"], end: c["1º periodo de ferias"]} : null,
-      c["2º periodo de ferias"] ? {start: c["2º periodo de ferias"], end: c["2º periodo de ferias"]} : null,
-      c["3º periodo de ferias"] ? {start: c["3º periodo de ferias"], end: c["3º periodo de ferias"]} : null
-    ].filter(Boolean)
-  }));
-  updateAll();
+  try {
+    const data = await apiPost({ action: "list" });
+    collaborators = data.map(c => ({
+      name: c["Nome completo"] || "",
+      setor: c["setor"] || "",
+      photo: c["foto"] || "",
+      birthday: c["aniversario"] || "",
+      chave: c["chave"] || "",
+      vacations: [
+        c["1º periodo de ferias"] ? { start: c["1º periodo de ferias"], end: c["1º periodo de ferias"] } : null,
+        c["2º periodo de ferias"] ? { start: c["2º periodo de ferias"], end: c["2º periodo de ferias"] } : null,
+        c["3º periodo de ferias"] ? { start: c["3º periodo de ferias"], end: c["3º periodo de ferias"] } : null
+      ].filter(Boolean)
+    }));
+    updateAll();
+  } catch (err) {
+    console.error("fetchAndUpdate erro:", err);
+    // mantém a UI com o estado atual
+    updateAll();
+  }
 }
 
 // --- FIM DA INTERFACE DE EDIÇÃO ---
