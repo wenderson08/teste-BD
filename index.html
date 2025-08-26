@@ -336,7 +336,8 @@ async function apiPost(params) {
   console.log("API request:", params);
   const res = await fetch(API_URL, {
     method: "POST",
-    body: new URLSearchParams(params)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params)
   });
   const text = await res.text();
   console.log("API raw response:", res.status, text);
@@ -344,7 +345,6 @@ async function apiPost(params) {
   try {
     return JSON.parse(text);
   } catch (err) {
-    // resposta não-JSON (útil para debug)
     throw new Error("API retornou texto inválido como JSON: " + text);
   }
 }
