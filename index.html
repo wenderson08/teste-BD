@@ -609,7 +609,58 @@ document.getElementById("pin-input").onkeydown = function(e) {
 document.getElementById("close-edit").onclick = function() {
   document.getElementById("edit-modal").style.display = "none";
 };
+document.getElementById("edit-form").onsubmit = async function(e) {
+  e.preventDefault();
+  const idx = document.getElementById("edit-index").value;
+  let chave = document.getElementById("edit-chave").value;
+  if (!chave) chave = Date.now().toString(); // Gera chave única
 
+  const colab = {
+    "Nome completo": document.getElementById("edit-nome").value,
+    "setor": document.getElementById("edit-setor").value,
+    "aniversario": document.getElementById("edit-aniversario").value,
+    "1º periodo de ferias": document.getElementById("edit-vac1").value,
+    "2º periodo de ferias": document.getElementById("edit-vac2").value,
+    "3º periodo de ferias": document.getElementById("edit-vac3").value,
+    "foto": document.getElementById("edit-foto").value,
+    "chave": chave
+  };
+
+  let response, result;
+  try {
+    if (idx === "") {
+      // Adicionar novo colaborador
+      response = await fetch(API_URL, {
+        method: "POST",
+        body: new URLSearchParams({ action: "add", ...colab })
+      });
+    } else {
+      // Editar colaborador existente
+      response = await fetch(API_URL, {
+        method: "POST",
+        body: new URLSearchParams({ action: "edit", ...colab })
+      });
+    }
+    result = await response.json();
+    console.log("Resposta do backend:", result);
+
+    if (result.status !== "OK" && !Array.isArray(result)) {
+      alert("Erro ao salvar colaborador! Tente novamente.");
+      return;
+    }
+  } catch (err) {
+    console.error("Erro no salvamento:", err);
+    alert("Erro de comunicação com o servidor.");
+    return;
+  }
+
+  await fetchAndUpdate();
+  renderEditList();
+  document.getElementById("edit-form").reset();
+  document.getElementById("edit-index").value = "";
+  document.getElementById("edit-chave").value = "";
+  alert("Colaborador salvo com sucesso!");
+};
 // Adicionar novo
 document.getElementById("add-new").onclick = function() {
   document.getElementById("edit-form").reset();
@@ -727,6 +778,7 @@ async function fetchAndUpdate() {
   </script> 
 </body>
 </html>
+
 
 
 
