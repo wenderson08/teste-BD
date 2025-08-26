@@ -265,8 +265,67 @@
     AW;Code 2025 - Todos os direitos reservados | <a href="mailto:contato@bagam.com" style="color:#fff;text-decoration:underline;">Contato</a>
     <img src="Fotos Colaboradores/logo2.png" width="70" height="80">
   </footer>
-  <script>
-    
+  
+
+<!-- Modal PIN -->
+<div id="pin-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;max-width:350px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
+    <button id="close-pin" style="position:absolute;top:12px;right:18px;background:none;border:none;font-size:1.5em;color:#047562;"><i class="fas fa-times"></i></button>
+    <h4 style="color:#047562;text-align:center;">Digite o PIN de acesso</h4>
+    <input type="password" id="pin-input" class="form-control" style="margin:18px 0;" placeholder="PIN" autofocus>
+    <div id="pin-error" style="color:#d81c1c;text-align:center;display:none;">PIN incorreto!</div>
+    <button id="pin-submit" class="btn btn-custom" style="width:100%;">Entrar</button>
+  </div>
+</div>
+  
+  
+<!-- Modal de edição -->
+<div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;max-width:500px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
+    <button id="close-edit" style="position:absolute;top:12px;right:18px;background:none;border:none;font-size:1.5em;color:#047562;"><i class="fas fa-times"></i></button>
+    <h2 style="text-align:center;color:#047562;">Editar Colaboradores</h2>
+    <form id="edit-form">
+      <input type="hidden" id="edit-index">
+      <input type="hidden" id="edit-chave">
+      <div class="mb-2">
+        <label>Nome:</label>
+        <input type="text" id="edit-nome" class="form-control" required>
+      </div>
+      <div class="mb-2">
+        <label>Setor:</label>
+        <input type="text" id="edit-setor" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>Aniversário (dd/mm/aaaa):</label>
+        <input type="text" id="edit-aniversario" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>1º Período de Férias:</label>
+        <input type="text" id="edit-vac1" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>2º Período de Férias:</label>
+        <input type="text" id="edit-vac2" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>3º Período de Férias:</label>
+        <input type="text" id="edit-vac3" class="form-control">
+      </div>
+      <div class="mb-2">
+        <label>Foto (URL):</label>
+        <input type="text" id="edit-foto" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-custom" style="width:100%;margin-top:10px;">Salvar</button>
+    </form>
+    <hr>
+    <h4 style="color:#047562;">Colaboradores</h4>
+    <ul id="edit-list" style="max-height:180px;overflow:auto;padding-left:0;"></ul>
+    <button id="add-new" class="btn btn-custom" style="margin-top:10px;width:100%;"><i class="fas fa-plus"></i> Novo Colaborador</button>
+  </div>
+</div>
+
+ <script>
+    document.addEventListener("DOMContentLoaded", function() {
    
     // Todos os colaboradores mantidos e exemplo de conflito
     let collaborators = [];
@@ -550,7 +609,58 @@ document.getElementById("pin-input").onkeydown = function(e) {
 document.getElementById("close-edit").onclick = function() {
   document.getElementById("edit-modal").style.display = "none";
 };
+document.getElementById("edit-form").onsubmit = async function(e) {
+  e.preventDefault();
+  const idx = document.getElementById("edit-index").value;
+  let chave = document.getElementById("edit-chave").value;
+  if (!chave) chave = Date.now().toString(); // Gera chave única
 
+  const colab = {
+    "Nome completo": document.getElementById("edit-nome").value,
+    "setor": document.getElementById("edit-setor").value,
+    "aniversario": document.getElementById("edit-aniversario").value,
+    "1º periodo de ferias": document.getElementById("edit-vac1").value,
+    "2º periodo de ferias": document.getElementById("edit-vac2").value,
+    "3º periodo de ferias": document.getElementById("edit-vac3").value,
+    "foto": document.getElementById("edit-foto").value,
+    "chave": chave
+  };
+
+  let response, result;
+  try {
+    if (idx === "") {
+      // Adicionar novo colaborador
+      response = await fetch(API_URL, {
+        method: "POST",
+        body: new URLSearchParams({ action: "add", ...colab })
+      });
+    } else {
+      // Editar colaborador existente
+      response = await fetch(API_URL, {
+        method: "POST",
+        body: new URLSearchParams({ action: "edit", ...colab })
+      });
+    }
+    result = await response.json();
+    console.log("Resposta do backend:", result);
+
+    if (result.status !== "OK" && !Array.isArray(result)) {
+      alert("Erro ao salvar colaborador! Tente novamente.");
+      return;
+    }
+  } catch (err) {
+    console.error("Erro no salvamento:", err);
+    alert("Erro de comunicação com o servidor.");
+    return;
+  }
+
+  await fetchAndUpdate();
+  renderEditList();
+  document.getElementById("edit-form").reset();
+  document.getElementById("edit-index").value = "";
+  document.getElementById("edit-chave").value = "";
+  alert("Colaborador salvo com sucesso!");
+};
 // Adicionar novo
 document.getElementById("add-new").onclick = function() {
   document.getElementById("edit-form").reset();
@@ -663,68 +773,13 @@ async function fetchAndUpdate() {
   document.getElementById("close-pin").onclick = function() {
   document.getElementById("pin-modal").style.display = "none";
 };  
-  </script>
-
-<!-- Modal PIN -->
-<div id="pin-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;max-width:350px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
-    <button id="close-pin" style="position:absolute;top:12px;right:18px;background:none;border:none;font-size:1.5em;color:#047562;"><i class="fas fa-times"></i></button>
-    <h4 style="color:#047562;text-align:center;">Digite o PIN de acesso</h4>
-    <input type="password" id="pin-input" class="form-control" style="margin:18px 0;" placeholder="PIN" autofocus>
-    <div id="pin-error" style="color:#d81c1c;text-align:center;display:none;">PIN incorreto!</div>
-    <button id="pin-submit" class="btn btn-custom" style="width:100%;">Entrar</button>
-  </div>
-</div>
-  
-  
-<!-- Modal de edição -->
-<div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;max-width:500px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
-    <button id="close-edit" style="position:absolute;top:12px;right:18px;background:none;border:none;font-size:1.5em;color:#047562;"><i class="fas fa-times"></i></button>
-    <h2 style="text-align:center;color:#047562;">Editar Colaboradores</h2>
-    <form id="edit-form">
-      <input type="hidden" id="edit-index">
-      <input type="hidden" id="edit-chave">
-      <div class="mb-2">
-        <label>Nome:</label>
-        <input type="text" id="edit-nome" class="form-control" required>
-      </div>
-      <div class="mb-2">
-        <label>Setor:</label>
-        <input type="text" id="edit-setor" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>Aniversário (dd/mm/aaaa):</label>
-        <input type="text" id="edit-aniversario" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>1º Período de Férias:</label>
-        <input type="text" id="edit-vac1" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>2º Período de Férias:</label>
-        <input type="text" id="edit-vac2" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>3º Período de Férias:</label>
-        <input type="text" id="edit-vac3" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>Foto (URL):</label>
-        <input type="text" id="edit-foto" class="form-control">
-      </div>
-      <button type="submit" class="btn btn-custom" style="width:100%;margin-top:10px;">Salvar</button>
-    </form>
-    <hr>
-    <h4 style="color:#047562;">Colaboradores</h4>
-    <ul id="edit-list" style="max-height:180px;overflow:auto;padding-left:0;"></ul>
-    <button id="add-new" class="btn btn-custom" style="margin-top:10px;width:100%;"><i class="fas fa-plus"></i> Novo Colaborador</button>
-  </div>
-</div>
-
-  
+});
+      
+  </script> 
 </body>
 </html>
+
+
 
 
 
