@@ -9,14 +9,101 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
+    html {
+  scroll-behavior: smooth;
+}
 
+.member-card { overflow: visible; } /* garantir que confetes saiam do card */
+.member-card.birthday-today {
+  animation: pulse-card 1.2s infinite;
+  border: 4px solid #ffd54f !important;
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(255,193,7,0.16), 0 6px 18px rgba(33,134,67,0.08);
+  position: relative;
+  z-index: 2;
+}
+
+/* pulse */
+@keyframes pulse-card {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.527);
+  }
+  12.5% {
+    box-shadow: 0 0 30px 8px rgba(244, 67, 54, 0.616); /* vermelho */
+  }
+  25% {
+    box-shadow: 0 0 30px 8px rgba(255, 153, 0, 0.664); /* laranja */
+  }
+  37.5% {
+    box-shadow: 0 0 30px 8px rgba(255, 235, 59, 0.664); /* amarelo */
+  }
+  50% {
+    box-shadow: 0 0 30px 8px rgba(76, 175, 79, 0.678); /* verde */
+  }
+  62.5% {
+    box-shadow: 0 0 30px 8px rgba(33, 149, 243, 0.644); /* azul */
+  }
+  75% {
+    box-shadow: 0 0 30px 8px rgba(104, 58, 183, 0.603); /* roxo */
+  }
+  87.5% {
+    box-shadow: 0 0 30px 8px rgba(233, 30, 98, 0.623); /* rosa */
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.479);
+  }
+}
+
+/* confete pieces */
+.confetti {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+  display: inline-block;
+  line-height: 1;
+  font-size: var(--em-size, 22px);
+  transform-origin: center;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.12));
+  /* animação mais suave, sem rotações */
+  animation: confetti-explode var(--dur, 1600ms) cubic-bezier(.0,.6,.2,0) both;
+  animation-delay: var(--delay, 5ms);
+  background: transparent;
+  user-select: none;
+  opacity: 0;
+}
+
+/* explosão suave de dentro para fora — sem giro */
+@keyframes confetti-explode {
+  0% {
+    transform: translate(0,0) scale(0.18);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(calc(var(--dx) * 0.12), calc(var(--dy) * 0.12)) scale(1.04);
+    opacity: 1;
+  }
+  35% {
+    transform: translate(calc(var(--dx) * 0.45), calc(var(--dy) * 0.45)) scale(1.00);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(calc(var(--dx) * 0.85), calc(var(--dy) * 0.85)) scale(0.98);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.96);
+    opacity: 0;
+  }
+}
 .calendar-day.today {
   border: 3px solid #dd4a06 !important;
   box-shadow: 0 0 16px 2px #dd4a06, 0 0 0 px #dd4a06 inset;
   animation: pulse-today 1.2s infinite alternate;
   position: relative;
 }
-
 
 .calendar-day.conflict-event {
       /* Metade feriado, metade aniversário */
@@ -163,6 +250,9 @@
     @media (max-width:600px) {
       .calendar-tooltip {font-size:.92rem;top:-50px;}
     }
+    section {
+  scroll-margin-top: 90px; /* ajuste conforme altura do header */
+}
     section {background:rgba(255,255,255,.11);border-radius:13px;padding:20px 14px 36px 14px;margin-bottom:32px;box-shadow:var(--shadow);border:1.5px solid var(--accent);}
     .team-container {display:flex;flex-wrap:wrap;gap:30px;justify-content:center;}
     .member-card {background:var(--card-bg);border-radius:var(--card-radius);padding:28px 18px 24px 18px;width:260px;box-shadow:0 4px 20px rgba(33,134,67,.14);margin-bottom:20px;display:flex;flex-direction:column;align-items:center;border:2.5px solid var(--accent);transition:transform .16s,box-shadow .16s;}
@@ -203,14 +293,34 @@
     </div>
    
     <nav>
-      <a href="#team-list"><i class="fas fa-users"></i> Colaboradores</a>
-      <a href="#vacation-list"><i class="fas fa-plane"></i> Férias</a>
-      <a href="#birthday-list"><i class="fas fa-birthday-cake"></i> Aniversariantes</a>
-      <button id="edit-toggle" class="btn btn-custom">
-      <i class="fas fa-edit"></i> Editar
-</button>
-      
-    </nav>
+  <a href="#team-list-section"><i class="fas fa-users"></i> Colaboradores</a>
+  <a href="#vacation-list-section"><i class="fas fa-plane"></i> Férias</a>
+  <a href="#birthday-list-section"><i class="fas fa-birthday-cake"></i> Aniversariantes</a>
+</nav>
+    <button id="filter-btn" class="btn btn-custom" style="margin-left:18px;"><i class="fas fa-filter"></i> Filtrar</button>
+<div id="filter-panel" style="display:none;position:absolute;top:60px;right:40px;z-index:2000;background:#fff;border-radius:12px;box-shadow:0 4px 18px #0002;padding:22px 28px;min-width:320px;">
+  <h4 style="margin-bottom:18px;">Filtrar colaboradores</h4>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <label>Setor:
+      <select id="filter-setor" class="form-select">
+        <option value="">Todos</option>
+      </select>
+    </label>
+    <label>Nome:
+      <input type="text" id="filter-nome" class="form-control" placeholder="Digite o nome">
+    </label>
+    <label>Data de aniversário:
+      <input type="text" id="filter-aniversario" class="form-control" placeholder="dd/mm">
+    </label>
+    <label>
+      <input type="checkbox" id="filter-ferias"> Mostrar apenas quem está de férias no mês
+    </label>
+    <button id="filter-aplicar" class="btn btn-success mt-2"><i class="fas fa-search"></i> Aplicar filtro</button>
+    <button id="filter-fechar" class="btn btn-secondary mt-1"><i class="fas fa-times"></i> Fechar</button>
+    <button id="filter-limpar" class="btn btn-outline-secondary mt-1"><i class="fas fa-undo"></i> Limpar filtro</button>
+  </div>
+  <div id="filter-resultado" style="margin-top:18px;"></div>
+</div>
   </header>
   <div class="container" style="padding-top:80px;">
     <h1 class="text-center">VEJA BAGAM</h1>
@@ -245,112 +355,159 @@
       </div>
       <div class="calendar-grid" id="calendar-grid"></div>
     </div>
-    <section>
+    <section id="vacation-list-section">
       <h2 style="color: #ffffff;"><i class="fas fa-plane"></i> Colaboradores de férias no mês</h2>
       <div id="vacation-list" class="team-container"></div>
     </section>
-    <section>
+    <section id="birthday-list-section">
      
       <h2 style="color: #ffffff;"><i class="fas fa-birthday-cake"></i> Aniversariantes do mês</h2>
       <div id="birthday-list" class="team-container"></div>
   
     </section>
-    <section>
+    <section id="team-list-section">
       <h2 style="color: #ffffff;"><i class="fas fa-users"></i> Todos os colaboradores</h2>
       <div id="team-list" class="team-container"></div>
     </section>
+    <section id="expiring-vacations-list-section">
+      <h2 style="color: #ffffff;"><i class="fas fa-hourglass-end"></i> Férias a expirar</h2>
+      <div id="expiring-vacations-list" class="team-container"></div>
+    </section>
   </div>
+
   <footer>
     AW;Code 2025 - Todos os direitos reservados | <a href="mailto:contato@bagam.com" style="color:#fff;text-decoration:underline;">Contato</a>
     <img src="Fotos Colaboradores/logo2.png" width="70" height="80">
   </footer>
-  
+  <script>
 
-<!-- Modal PIN -->
-<div id="pin-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;max-width:350px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
-    <button id="close-pin" style="position:absolute;top:12px;right:18px;background:none;border:none;font-size:1.5em;color:#047562;"><i class="fas fa-times"></i></button>
-    <h4 style="color:#047562;text-align:center;">Digite o PIN de acesso</h4>
-    <input type="password" id="pin-input" class="form-control" style="margin:18px 0;" placeholder="PIN" autofocus>
-    <div id="pin-error" style="color:#d81c1c;text-align:center;display:none;">PIN incorreto!</div>
-    <button id="pin-submit" class="btn btn-custom" style="width:100%;">Entrar</button>
-  </div>
-</div>
-  
-  
-<!-- Modal de edição -->
-<div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:3000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;max-width:500px;width:95vw;padding:32px 24px;box-shadow:0 8px 32px #0002;position:relative;">
-    <button id="close-edit" style="position:absolute;top:12px;right:18px;background:none;border:none;font-size:1.5em;color:#047562;"><i class="fas fa-times"></i></button>
-    <h2 style="text-align:center;color:#047562;">Editar Colaboradores</h2>
-    <form id="edit-form">
-      <input type="hidden" id="edit-index">
-      <input type="hidden" id="edit-chave">
-      <div class="mb-2">
-        <label>Nome:</label>
-        <input type="text" id="edit-nome" class="form-control" required>
-      </div>
-      <div class="mb-2">
-        <label>Setor:</label>
-        <input type="text" id="edit-setor" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>Aniversário (dd/mm/aaaa):</label>
-        <input type="text" id="edit-aniversario" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>1º Período de Férias:</label>
-        <input type="text" id="edit-vac1" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>2º Período de Férias:</label>
-        <input type="text" id="edit-vac2" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>3º Período de Férias:</label>
-        <input type="text" id="edit-vac3" class="form-control">
-      </div>
-      <div class="mb-2">
-        <label>Foto (URL):</label>
-        <input type="text" id="edit-foto" class="form-control">
-      </div>
-      <button type="submit" class="btn btn-custom" style="width:100%;margin-top:10px;">Salvar</button>
-    </form>
-    <hr>
-    <h4 style="color:#047562;">Colaboradores</h4>
-    <ul id="edit-list" style="max-height:180px;overflow:auto;padding-left:0;"></ul>
-    <button id="add-new" class="btn btn-custom" style="margin-top:10px;width:100%;"><i class="fas fa-plus"></i> Novo Colaborador</button>
-  </div>
-</div>
-
- <script>
-    document.addEventListener("DOMContentLoaded", function() {
-   
     // Todos os colaboradores mantidos e exemplo de conflito
-    let collaborators = [];
-    const PIN_CORRETO = "131208087704";
-    const API_URL = "https://script.google.com/macros/s/AKfycbzKwUXw7N8BpzZUEvt_CatMd225ZQY2XIhK-EBAb4DyxXFux13IBP2HHmJ5NX-EXBlQ/exec";
+    const collaborators = [
+  {name:"AGEILSON",setor:"Operação",photo:"Fotos Colaboradores/ageilson.png",vacations:[
+    {start:"13/01/2025",end:"01/02/2025"},
+    {start:"12/01/2026",end:"31/01/2026"}
+  ],birthday:"27/08"},
+  {name:"ALLAN",setor:"Operação",photo:"Fotos Colaboradores/allan.png",vacations:[
+    {start:"29/05/2025",end:"12/06/2025"},
+    {start:"20/10/2025",end:"08/11/2025"}
+  ],birthday:"12/06"},
+  {name:"ALDERIR",setor:"Pintura",photo:"Fotos Colaboradores/alderir.jpeg",vacations:[],birthday:"04/02"},
+  {name:"ANA CLÉZIA",setor:"CCO",photo:"Fotos Colaboradores/ana.jpeg",vacations:[],birthday:"20/11"},
+  {name:"AUGUSTO",setor:"Manutenção",photo:"Fotos Colaboradores/augusto.png",vacations:[],birthday:"25/05"},
+  {name:"CLEIRTON",setor:"Gerência",photo:"Fotos Colaboradores/cleirton.png",vacations:[
+    {start:"03/11/2025",end:"17/11/2025"},
+    {start:"23/02/2025",end:"27/02/2025"}
+  ],birthday:"12/05"},
+  {name:"CRISTIANO",setor:"Operação",photo:"Fotos Colaboradores/cristiano.png",vacations:[
+    {start:"14/04/2025",end:"03/05/2025"}
+  ],birthday:"15/04"},
+  {name:"DANIEL",setor:"Conservação",photo:"Fotos Colaboradores/daniel.png",vacations:[],birthday:"26/08"},
+  {name:"DANILO",setor:"Laboratório",photo:"Fotos Colaboradores/danilo.png",vacations:[],birthday:"12/10"},
+  {name:"DOUGLAS",setor:"Operação",photo:"Fotos Colaboradores/douglas.jpeg",vacations:[],birthday:"23/12"},
+  {name:"EDNILMA",setor:"Conservação",photo:"Fotos Colaboradores/nenem.jpg",vacations:[],birthday:"26/08"},
+  {name:"EDUARDO",setor:"Liderança",photo:"Fotos Colaboradores/eduardo.png",vacations:[
+    {start:"05/03/2025",end:"09/03/2025"}
+  ],birthday:"16/03"},
+  {name:"ELTOM",setor:"Operação",photo:"Fotos Colaboradores/eltom.png",vacations:[
+    {start:"16/06/2025",end:"06/07/2025"}
+  ],birthday:"11/08"},
+  {name:"NALDO",setor:"Operação",photo:"Fotos Colaboradores/naldo.png",vacations:[
+   {start:"19/02/2025",end:"05/03/2025"}
+  ],birthday:"28/10"},
+  {name:"GABRIEL",setor:"Vigilância",photo:"Fotos Colaboradores/gabriel.png",vacations:[],birthday:"25/03"},
+  {name:"GEDSON",setor:"Operação",photo:"Fotos Colaboradores/gedson.png",vacations:[
+    {start:"04/08/2025",end:"02/09/2025"}
+  ],birthday:"03/06"},
+  {name:"GLEISON",setor:"Operação",photo:"Fotos Colaboradores/gleison.png",vacations:[
+    {start:"15/09/2025",end:"29/09/2025"},
+    {start:"17/11/2025",end:"01/12/2025"}
+  ],birthday:"06/07"},
+  {name:"HELINE",setor:"Administrativo",photo:"Fotos Colaboradores/heline.png",vacations:[
+    {start:"24/02/2025",end:"28/02/2025"}
+  ],birthday:"06/11"},
+  {name:"HILANA",setor:"CCO",photo:"Fotos Colaboradores/hilana.png",vacations:[
+    {start:"24/02/2025",end:"28/02/2025"}
+  ],birthday:"24/06"},
+  {name:"ISAIAS",setor:"Operação",photo:"Fotos Colaboradores/isaias.png",vacations:[],birthday:"29/03"},
+  {name:"JOÃO VITOR",setor:"CCO",photo:"Fotos Colaboradores/joao.png",vacations:[
+    {start:"23/01/2025",end:"06/02/2025"}
+  ],birthday:"12/05"},
+  {name:"JUNIOR",setor:"Manutenção",photo:"Fotos Colaboradores/junior.jpeg",vacations:[],birthday:"16/11"},
+  {name:"JULLY",setor:"Operação",photo:"Fotos Colaboradores/jully.png",vacations:[
+    {start:"02/12/2025",end:"31/12/2025"}
+  ],birthday:"23/09"},
+  {name:"LEANDRO",setor:"Vigilância",photo:"Fotos Colaboradores/leandro.jpeg",vacations:[],birthday:"25/02"},
+  {name:"MARIA CLAUDIA",setor:"Administrativo",photo:"Fotos Colaboradores/claudia.jpg",vacations:[],birthday:"27/10"},
+  {name:"NAILSON",setor:"Vigilância",photo:"Fotos Colaboradores/nailson.png",vacations:[],birthday:"03/11"},
+  {name:"PETERSON",setor:"Laboratório",photo:"Fotos Colaboradores/peterson.png",vacations:[
+    {start:"24/02/2025",end:"28/02/2025"}
+  ],birthday:"10/08"},
+  {name:"RONILSON",setor:"Operação",photo:"Fotos Colaboradores/ronilson.png",vacations:[
+    {start:"10/03/2025",end:"08/04/2025"}
+  ],birthday:"08/12"},
+  {name:"SAMUEL",setor:"Conservação",photo:"Fotos Colaboradores/samuel.jpg",vacations:[],birthday:"28/08"},
+  {name:"VALMIR",setor:"Vigilância",photo:"Fotos Colaboradores/valmir.jpg",vacations:[],birthday:"02/01"},
+  {name:"VLADIMIR",setor:"Pintura",photo:"Fotos Colaboradores/vlad.jpg",vacations:[],birthday:"17/02"},
+  {name:"WAGNER",setor:"CCO",photo:"Fotos Colaboradores/wagner.png",vacations:[
+    {start:"02/01/2025",end:"20/01/2025"},
+    {start:"20/05/2025",end:"24/05/2025"},
+    {start:"02/01/2026",end:"20/01/2026"}
+  ],birthday:"10/05"},
+  {name:"WENDERSON",setor:"TI",photo:"Fotos Colaboradores/wenderson.png",vacations:[],birthday:"08/08"},
+  {name:"WILLIAM",setor:"SMS",photo:"Fotos Colaboradores/william.png",vacations:[
+    // 1º período não informado (xxxxx)
+    {start:"24/06/2025",end:"28/06/2025"},
+    {start:"19/08/2025",end:"01/09/2025"}
+  ],birthday:"01/04"}
+];
 
-async function apiPost(params) {
-  console.log("API request:", params);
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params)
+// Função para obter colaboradores com férias a expirar (11 meses sem férias)
+function getExpiringVacations(collaborators, selectedMonth, selectedYear) {
+  // Considera o último dia do mês/ano selecionado como referência
+  const now = new Date(selectedYear, selectedMonth + 1, 0);
+  const thresholdDays = 330; // 11 meses
+  return collaborators.filter(colab => {
+    if (!Array.isArray(colab.vacations) || colab.vacations.length === 0) return true; // Nunca tirou férias
+    // Pega o último período de férias registrado
+    const lastVacation = colab.vacations.reduce((latest, v) => {
+      const end = parseDateBR(v.end);
+      return (!latest || (end && end > parseDateBR(latest.end))) ? v : latest;
+    }, null);
+    if (!lastVacation || !lastVacation.end) return true;
+    const lastEnd = parseDateBR(lastVacation.end);
+    if (!lastEnd) return true;
+    const diffDays = Math.floor((now - lastEnd) / (1000 * 60 * 60 * 24));
+    return diffDays >= thresholdDays;
   });
-  const text = await res.text();
-  console.log("API raw response:", res.status, text);
-  if (!res.ok) throw new Error("HTTP " + res.status + " - " + text);
-  try {
-    return JSON.parse(text);
-  } catch (err) {
-    throw new Error("API retornou texto inválido como JSON: " + text);
-  }
 }
-async function fetchCollaboratorsFromSheet() {
-  await fetchAndUpdate();
-  };
-  
+
+    // Adiciona alerta visual na lista de colaboradores com férias a expirar
+    function renderExpiringVacationsList(list, container) {
+      container.innerHTML = list.length ? list.map(colab => {
+        const photoUrl = colab.photo || "https://via.placeholder.com/120x120?text=Colaborador";
+        let lastVacationText = "Nunca tirou férias";
+        if (Array.isArray(colab.vacations) && colab.vacations.length > 0) {
+          const lastVacation = colab.vacations.reduce((latest, v) => {
+            const end = parseDateBR(v.end);
+            return (!latest || (end && end > parseDateBR(latest.end))) ? v : latest;
+          }, null);
+          if (lastVacation && lastVacation.end) {
+            lastVacationText = `Último período: ${formatDateBR(lastVacation.start)} a ${formatDateBR(lastVacation.end)}`;
+          }
+        }
+        return `<div class="member-card" style="border-color:#d81c1c;">
+          <i class="fas fa-user"></i>
+          <img src="${photoUrl}" alt="${colab.name}" class="member-photo"/>
+          <h3>${colab.name}</h3>
+          <p><strong><i class="fas fa-building"></i> Setor:</strong> ${colab.setor || "N/D"}</p>
+          <p><i class="fas fa-hourglass-end" style="color:#d81c1c;"></i> <span style="color:#d81c1c;font-weight:bold;">Férias a expirar!</span></p>
+          <p>${lastVacationText}</p>
+          <p style="color:#d81c1c;font-size:0.98rem;"><i class="fas fa-exclamation-triangle"></i> Marque suas férias o quanto antes!</p>
+        </div>`;
+      }).join("") : "<p>Nenhum colaborador com férias a expirar.</p>";
+    }
+
+// Feriados municipais e estaduais específicos de Guamaré/RN
 const localHolidays = [
       { day: 20, month: 0, year: 2025, name: "São Sebastião – Municipal" },
       { day: 7, month: 4, year: 2025, name: "Emancipação Política de Guamaré – Municipal" },
@@ -548,216 +705,351 @@ const localHolidays = [
       }
     }
     function renderCollaboratorList(list,container,showVacation,showBirthday,conflicts,sectorConflicts){
-      container.innerHTML=list.length?list.map(colab=>{
-        const photoUrl=colab.photo||"https://via.placeholder.com/120x120?text=Colaborador";
-        return `<div class="member-card">
-          <i class="fas fa-user"></i>
-          <img src="${photoUrl}" alt="${colab.name}" class="member-photo"/>
-          <h3>${colab.name}</h3>
-          <p><strong><i class="fas fa-building"></i> Setor:</strong> ${colab.setor || "N/D"}</p>
-          ${
-            showVacation && Array.isArray(colab.vacations)
-              ? colab.vacations.map((v, idx) =>
-  `<p><i class="fas fa-plane-departure"></i> <strong>${idx+1}º período:</strong> ${formatDateBR(v.start)} a ${formatDateBR(v.end)}</p>`
+  const today = new Date();
+  const showTodayHighlight = selectedMonth === today.getMonth() && selectedYear === today.getFullYear();
+  container.innerHTML = list.length ? list.map(colab => {
+    const photoUrl = colab.photo || "https://via.placeholder.com/120x120?text=Colaborador";
+    const isBirthdayToday = showBirthday && colab.birthday &&
+      getBirthdayMonth(colab.birthday) === today.getMonth() &&
+      getBirthdayDay(colab.birthday) === today.getDate() &&
+      showTodayHighlight;
+    return `<div class="member-card${isBirthdayToday ? ' birthday-today' : ''}">
+      <i class="fas fa-user"></i>
+      <img src="${photoUrl}" alt="${colab.name}" class="member-photo"/>
+      <h3>${colab.name}</h3>
+      <p><strong><i class="fas fa-building"></i> Setor:</strong> ${colab.setor || "N/D"}</p>
+      ${
+        showVacation && Array.isArray(colab.vacations)
+          ? colab.vacations.map((v, idx) =>
+`<p><i class="fas fa-plane-departure"></i> <strong>${idx+1}º período:</strong> ${formatDateBR(v.start)} a ${formatDateBR(v.end)}</p>`
 ).join("")
-              : ""
-          }
-          ${
-            sectorConflicts && sectorConflicts.has(colab.name)
-              ? `<p class="conflict" style="background:#ffefc7;color:#856404;border-color:#ffc107;"><i class="fas fa-exclamation-triangle"></i> Alerta: Conflito de férias no setor!</p>`
-              : ""
-          }
-          ${
-            showBirthday && colab.birthday
-              ? `<p><i class="fas fa-birthday-cake"></i> Aniversário: ${formatDateBR(colab.birthday)}</p>`
-              : ""
-          }
-        </div>`;
-      }).join(""):"<p>Nenhum colaborador encontrado.</p>";
-    }
-    function updateAll(){
-      renderCalendar();
-      const vacationList=collaborators.filter(c=>isOnVacationInMonth(c.vacations,selectedMonth,selectedYear)),
-        birthdayList=collaborators.filter(c=>getBirthdayMonth(c.birthday)===selectedMonth),
-        conflicts=findVacationConflicts(collaborators,selectedMonth,selectedYear),
-        sectorConflicts=findVacationSectorConflicts(collaborators,selectedMonth,selectedYear);
-      renderCollaboratorList(vacationList,document.getElementById("vacation-list"),true,false,conflicts,sectorConflicts);
-      renderCollaboratorList(birthdayList,document.getElementById("birthday-list"),false,true,null,sectorConflicts);
-      renderCollaboratorList(collaborators.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')),document.getElementById("team-list"),true,true,conflicts,sectorConflicts);
-    }
-   async function startApp() {
-  await fetchCollaboratorsFromSheet();
-  updateAll();
+          : ""
+      }
+      ${
+        sectorConflicts && sectorConflicts.has(colab.name)
+          ? `<p class="conflict" style="background:#ffefc7;color:#856404;border-color:#ffc107;"><i class="fas fa-exclamation-triangle"></i> Alerta: Conflito de férias no setor!</p>`
+          : ""
+      }
+      ${
+        showBirthday && colab.birthday
+          ? `<p><i class="fas fa-birthday-cake"></i> Aniversário: ${formatDateBR(colab.birthday)}</p>`
+          : ""
+      }
+    </div>`;
+  }).join("") : "<p>Nenhum colaborador encontrado.</p>";
 }
-startApp();
+  //quiser voltar depois apaga aqui pra ficar em loop os emojis embaixo essa função (tem q descomentar os loops)
+function setupBirthdayCardConfetti() {
+  // Remove qualquer loop anterior
+  stopConfettiLoop();
+  // Seleciona todos os cards de aniversário do dia
+  document.querySelectorAll('.member-card.birthday-today').forEach(card => {
+    let confettiTimer = null;
+    card.addEventListener('mouseenter', () => {
+      // Inicia confete em loop enquanto mouse está sobre o card
+      createConfettiBurst(card, 15); // burst inicial
+      confettiTimer = setInterval(() => createConfettiBurst(card, 10), 700);
+      card._confettiTimer = confettiTimer;
+    });
+    card.addEventListener('mouseleave', () => {
+      // Para o loop ao sair do card
+      if (card._confettiTimer) clearInterval(card._confettiTimer);
+      card._confettiTimer = null;
+    });
+  });
+}
 
+/* cria confetes dentro de cada card com classe .birthday-today */
+let _confettiLoopTimer = null;
+
+function createConfettiBurst(card, count = 18) {
+  const emojis = ['🎉','🥳','👏'];
+  const rect = card.getBoundingClientRect();
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('span');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+    // tamanho do emoji (mais variado mas suave)
+    const emSize = 16 + Math.floor(Math.random() * 14); // 16..29px
+    el.style.setProperty('--em-size', emSize + 'px');
+
+    // posiciona no centro para explosão interna
+    el.style.left = (cx - emSize / 2) + 'px';
+    el.style.top = (cy - emSize / 2) + 'px';
+
+    // direção radial aleatória
+    const angle = Math.random() * Math.PI * 2;
+    // distância final menor e mais controlada para suavidade
+    const base = Math.max(rect.width, rect.height);
+    const distance = 40 + Math.random() * (base * 0.55); // menor spread
+
+    // vento sutil e bias de gravidade reduzido
+    const wind = (Math.random() * 60 - 30); // -30..30
+    const gravityBias = 24 + Math.random() * 28; // menos queda brusca
+
+    const dx = Math.cos(angle) * distance + wind * 0.2;
+    const dy = Math.sin(angle) * distance + gravityBias;
+
+    el.style.setProperty('--dx', Math.round(dx) + 'px');
+    el.style.setProperty('--dy', Math.round(dy) + 'px');
+
+    // NÃO aplicar rotação: removido --rot para efeito sem giro
+
+    // duração e delay suaves (estagger pequeno)
+    const dur = (1100 + Math.random() * 700).toFixed(0) + 'ms'; // 1100..1800ms
+    const delay = Math.floor(Math.random() * 140); // 0..140ms
+    el.style.setProperty('--dur', dur);
+    el.style.setProperty('--delay', delay + 'ms');
+
+    // opacidade inicial consistente para suavidade
+    el.style.opacity = 0.92;
+
+    card.appendChild(el);
+
+    // remove depois da animação terminar
+    const removeAfter = parseInt(dur, 10) + parseInt(delay, 10) + 300;
+    setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, removeAfter);
+  }
+}
+
+function startConfettiLoop() {
+  stopConfettiLoop(); // evita timers duplicados
+  const cards = document.querySelectorAll('.member-card.birthday-today');
+  if (!cards.length) return;
+  cards.forEach(c => createConfettiBurst(c, 15)); // burst inicial
+  _confettiLoopTimer = setInterval(() => {
+    const current = document.querySelectorAll('.member-card.birthday-today');
+    if (!current.length) { stopConfettiLoop(); return; }
+    current.forEach(c => createConfettiBurst(c, 10));
+  }, 700);
+}
+
+function stopConfettiLoop() {
+  if (_confettiLoopTimer) {
+    clearInterval(_confettiLoopTimer);
+    _confettiLoopTimer = null;
+  }
+}
+
+/* compatibilidade: chamada usada pelo updateAll() */
+function launchConfettiOnBirthdayCards() {
+  //startConfettiLoop();
+}
+    
+    function updateAll(){
+  //stopConfettiLoop(); // <--- evita múltiplos timers quando trocar mês/ano
+  renderCalendar();
+  const vacationList = collaborators.filter(c=>isOnVacationInMonth(c.vacations,selectedMonth,selectedYear)),
+        birthdayList = collaborators.filter(c=>getBirthdayMonth(c.birthday)===selectedMonth),
+        conflicts = findVacationConflicts(collaborators,selectedMonth,selectedYear),
+        sectorConflicts = findVacationSectorConflicts(collaborators,selectedMonth,selectedYear),
+        expiringList = getExpiringVacations(collaborators, selectedMonth, selectedYear); // <-- ADICIONADO
+  renderCollaboratorList(vacationList,document.getElementById("vacation-list"),true,false,conflicts,sectorConflicts);
+  renderCollaboratorList(birthdayList,document.getElementById("birthday-list"),false,true,null,sectorConflicts);
+  renderCollaboratorList(collaborators.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')),document.getElementById("team-list"),true,true,conflicts,sectorConflicts);
+  renderExpiringVacationsList(expiringList, document.getElementById("expiring-vacations-list")); // <-- ADICIONADO
+
+  // espera DOM renderizar e inicia confete em loop se houver aniversários hoje
+  setTimeout(launchConfettiOnBirthdayCards, 200);
+
+  //quiser voltar depois apaga aqui pra ficar em loop os emojis
+  renderCollaboratorList(collaborators.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')),document.getElementById("team-list"),true,true,conflicts,sectorConflicts);
+  // Adiciona eventos de mouse nos cards de aniversário do dia
+  setupBirthdayCardConfetti();
+}
+
+// Preenche setores únicos no filtro
+function preencherSetoresFiltro() {
+  const setores = [...new Set(collaborators.map(c => c.setor).filter(Boolean))].sort();
+  const select = document.getElementById('filter-setor');
+  select.innerHTML = '<option value="">Todos</option>' + setores.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// Mostra/esconde painel de filtro
+document.getElementById('filter-btn').onclick = function() {
+  preencherSetoresFiltro();
+  document.getElementById('filter-panel').style.display = 'block';
+};
+document.getElementById('filter-fechar').onclick = function() {
+  document.getElementById('filter-panel').style.display = 'none';
+  document.getElementById('filter-resultado').innerHTML = '';
+};
+
+// Adiciona aviso de filtro ativo e botão para limpar
+function mostrarAvisoFiltro(filtrados) {
+  let aviso = document.getElementById('aviso-filtro');
+  if (!aviso) {
+    aviso = document.createElement('div');
+    aviso.id = 'aviso-filtro';
+    aviso.style.position = 'fixed';
+    aviso.style.top = '70px';
+    aviso.style.left = '50%';
+    aviso.style.transform = 'translateX(-50%)';
+    aviso.style.background = '#047562';
+    aviso.style.color = '#fff';
+    aviso.style.padding = '12px 28px';
+    aviso.style.borderRadius = '10px';
+    aviso.style.boxShadow = '0 2px 12px #0002';
+    aviso.style.zIndex = '3000';
+    aviso.style.fontWeight = 'bold';
+    aviso.style.fontSize = '1.12rem';
+    aviso.style.display = 'flex';
+    aviso.style.alignItems = 'center';
+    aviso.style.gap = '18px';
+    aviso.innerHTML = `<span><i class="fas fa-filter"></i> Filtro ativo (${filtrados.length} colaborador${filtrados.length===1?'':'es'})</span>
+      <button id="btn-limpar-filtro" class="btn btn-outline-light btn-sm" style="font-weight:600;"><i class="fas fa-undo"></i> Limpar filtro</button>`;
+    document.body.appendChild(aviso);
+    document.getElementById('btn-limpar-filtro').onclick = function() {
+      limparFiltro();
+    };
+  } else {
+    aviso.querySelector('span').innerHTML = `<i class="fas fa-filter"></i> Filtro ativo (${filtrados.length} colaborador${filtrados.length===1?'':'es'})`;
+  }
+  aviso.style.display = 'flex';
+}
+
+function esconderAvisoFiltro() {
+  const aviso = document.getElementById('aviso-filtro');
+  if (aviso) aviso.style.display = 'none';
+}
+
+// Função para limpar filtro e restaurar lista completa
+function limparFiltro() {
+  document.getElementById('filter-setor').value = '';
+  document.getElementById('filter-nome').value = '';
+  document.getElementById('filter-aniversario').value = '';
+  document.getElementById('filter-ferias').checked = false;
+  esconderAvisoFiltro();
+  updateAll();
+  document.getElementById('filter-panel').style.display = 'none';
+  document.getElementById('filter-resultado').innerHTML = '';
+}
+
+// Filtra e mostra resultado em todos os painéis
+document.getElementById('filter-aplicar').onclick = function() {
+  const setor = document.getElementById('filter-setor').value.trim();
+  const nome = document.getElementById('filter-nome').value.trim().toLowerCase();
+  const aniversario = document.getElementById('filter-aniversario').value.trim();
+  const soFerias = document.getElementById('filter-ferias').checked;
+
+  let filtrados = collaborators.filter(c => {
+    let ok = true;
+    if (setor) ok = ok && c.setor === setor;
+    if (nome) ok = ok && c.name.toLowerCase().includes(nome);
+    if (aniversario) ok = ok && c.birthday && formatDateBR(c.birthday).startsWith(aniversario);
+    if (soFerias) ok = ok && isOnVacationInMonth(c.vacations, selectedMonth, selectedYear);
+    return ok;
+  });
+
+  // Atualiza todos os campos com os colaboradores filtrados
+  const vacationList = filtrados.filter(c=>isOnVacationInMonth(c.vacations,selectedMonth,selectedYear));
+  const birthdayList = filtrados.filter(c=>getBirthdayMonth(c.birthday)===selectedMonth);
+  const conflicts = findVacationConflicts(filtrados,selectedMonth,selectedYear);
+  const sectorConflicts = findVacationSectorConflicts(filtrados,selectedMonth,selectedYear);
+  const expiringList = getExpiringVacations(filtrados, selectedMonth, selectedYear);
+
+  renderCollaboratorList(vacationList,document.getElementById("vacation-list"),true,false,conflicts,sectorConflicts);
+  renderCollaboratorList(birthdayList,document.getElementById("birthday-list"),false,true,null,sectorConflicts);
+  renderCollaboratorList(filtrados.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')),document.getElementById("team-list"),true,true,conflicts,sectorConflicts);
+  renderExpiringVacationsList(expiringList, document.getElementById("expiring-vacations-list"));
+
+  setupBirthdayCardConfetti();
+
+  // Fecha o painel de filtro após aplicar
+  document.getElementById('filter-panel').style.display = 'none';
+  document.getElementById('filter-resultado').innerHTML = '';
+
+  // Mostra aviso de filtro ativo
+  mostrarAvisoFiltro(filtrados);
+
+  // Leva o usuário até o painel de colaboradores filtrados
+  document.getElementById('team-list-section').scrollIntoView({ behavior: 'smooth' });
+};
+
+// Limpar filtro também pelo botão do painel
+document.getElementById('filter-limpar').onclick = function() {
+  limparFiltro();
+};
+    updateAll();
     document.getElementById("toggleDark")?.addEventListener("click",function(){
       document.body.classList.toggle("dark-mode");
       document.querySelector("footer").classList.toggle("dark-mode");
       document.querySelector(".container").classList.toggle("dark-mode");
     });
-
- // Substitua pela URL do seu Apps Script
-
-// Botão Editar
-document.getElementById("edit-toggle").onclick = function() {
-  document.getElementById("pin-modal").style.display = "flex";
-  document.getElementById("pin-input").value = "";
-  document.getElementById("pin-error").style.display = "none";
-  document.getElementById("pin-input").focus();
-};
-
-// PIN
-document.getElementById("pin-submit").onclick = function() {
-  if(document.getElementById("pin-input").value === PIN_CORRETO) {
-    document.getElementById("pin-modal").style.display = "none";
-    document.getElementById("edit-modal").style.display = "flex";
-    renderEditList();
-  } else {
-    document.getElementById("pin-error").style.display = "block";
-  }
-};
-document.getElementById("pin-input").onkeydown = function(e) {
-  if(e.key === "Enter") document.getElementById("pin-submit").click();
-};
-
-// Fechar modal edição
-document.getElementById("close-edit").onclick = function() {
-  document.getElementById("edit-modal").style.display = "none";
-};
-
-
-
-document.getElementById("edit-form").onsubmit = async function(e) {
-  e.preventDefault();
-  const idx = document.getElementById("edit-index").value;
-  let chave = document.getElementById("edit-chave").value;
-  if (!chave) chave = Date.now().toString();
-  const colab = {
-    "Nome completo": document.getElementById("edit-nome").value,
-    "setor": document.getElementById("edit-setor").value,
-    "aniversario": document.getElementById("edit-aniversario").value,
-    "1º periodo de ferias": document.getElementById("edit-vac1").value,
-    "2º periodo de ferias": document.getElementById("edit-vac2").value,
-    "3º periodo de ferias": document.getElementById("edit-vac3").value,
-    "foto": document.getElementById("edit-foto").value,
-    "chave": chave
+    
+function showNotification(msg, icon = "fa-info-circle", color = "#047562") {
+  // Cria um ID único para cada notificação
+  const notifId = 'auto-notification-' + Math.random().toString(36).substr(2, 6);
+  const notif = document.createElement('div');
+  notif.id = notifId;
+  notif.style.position = 'fixed';
+  notif.style.top = '18px';
+  notif.style.left = '50%';
+  notif.style.transform = 'translateX(-50%)';
+  notif.style.background = color;
+  notif.style.color = '#fff';
+  notif.style.padding = '13px 32px';
+  notif.style.borderRadius = '12px';
+  notif.style.boxShadow = '0 2px 16px #0002';
+  notif.style.zIndex = '4000';
+  notif.style.fontWeight = 'bold';
+  notif.style.fontSize = '1.13rem';
+  notif.style.display = 'flex';
+  notif.style.alignItems = 'center';
+  notif.style.gap = '16px';
+  notif.innerHTML = `<i class="fas ${icon}" style="font-size:1.3em;"></i> <span>${msg}</span>
+    <button id="close-notif-${notifId}" class="btn btn-outline-light btn-sm" style="margin-left:18px;"><i class="fas fa-times"></i></button>`;
+  document.body.appendChild(notif);
+  document.getElementById(`close-notif-${notifId}`).onclick = function() {
+    if (notif) notif.remove();
   };
-  try {
-    const action = idx ? "edit" : "add";
-    const json = await apiPost({ action, ...colab });
-    console.log("Resposta API JSON:", json);
-    if (!json || json.status !== "OK") throw new Error("Backend: " + JSON.stringify(json));
-    await fetchAndUpdate();
-    renderEditList();
-    document.getElementById("edit-form").reset();
-    document.getElementById("edit-index").value = "";
-    document.getElementById("edit-chave").value = "";
-    alert("Colaborador salvo com sucesso!");
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao salvar. Veja console e logs do Apps Script.");
-  }
-};
-
-  
-// Adicionar novo
-document.getElementById("add-new").onclick = function() {
-  document.getElementById("edit-form").reset();
-  document.getElementById("edit-index").value = "";
-  document.getElementById("edit-chave").value = "";
-};
-
-// Salvar (add/edit)
-
-// Renderizar lista de edição
-async function renderEditList() {
-  await fetchAndUpdate();
-  const ul = document.getElementById("edit-list");
-  ul.innerHTML = collaborators.map((c,i) => `
-    <li style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;">
-      <span>${c.name} <small style="color:#047562;">(${c.setor})</small></span>
-      <span>
-        <button onclick="editColab(${i})" style="background:none;border:none;color:#047562;"><i class="fas fa-pen"></i></button>
-        <button onclick="removeColab(${i})" style="background:none;border:none;color:#d81c1c;"><i class="fas fa-trash"></i></button>
-      </span>
-    </li>
-  `).join("");
-}
-
-// Editar colaborador
-window.editColab = function(i) {
-  const c = collaborators[i];
-  
-  document.getElementById("edit-index").value = i;
-  document.getElementById("edit-chave").value = c.chave;
-  document.getElementById("edit-nome").value = c.name;
-  document.getElementById("edit-setor").value = c.setor;
-  document.getElementById("edit-aniversario").value = c.birthday;
-  document.getElementById("edit-vac1").value = c.vacations[0]?.start || "";
-  document.getElementById("edit-vac2").value = c.vacations[1]?.start || "";
-  document.getElementById("edit-vac3").value = c.vacations[2]?.start || "";
-  document.getElementById("edit-foto").value = c.photo || "";
-};
-
-// Remover colaborador
-window.removeColab = async function(i) {
-  if (confirm("Remover colaborador?")) {
-    const chave = collaborators[i].chave;
-    try {
-      const json = await apiPost({ action: "delete", chave });
-      console.log("delete:", json);
-      await fetchAndUpdate();
-      renderEditList();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao remover. Veja console e logs do Apps Script.");
+  // Fecha automaticamente após 12 segundos
+  setTimeout(() => {
+    if (document.getElementById(notifId)) {
+      notif.style.display = 'none';
+      notif.remove();
     }
-  }
-};
-
-// Atualiza colaboradores do backend
-async function fetchAndUpdate() {
-  try {
-    const data = await apiPost({ action: "list" });
-    collaborators = data.map(c => ({
-      name: c["Nome completo"] || "",
-      setor: c["setor"] || "",
-      photo: c["foto"] || "",
-      birthday: c["aniversario"] || "",
-      chave: c["chave"] || "",
-      vacations: [
-        c["1º periodo de ferias"] ? { start: c["1º periodo de ferias"], end: c["1º periodo de ferias"] } : null,
-        c["2º periodo de ferias"] ? { start: c["2º periodo de ferias"], end: c["2º periodo de ferias"] } : null,
-        c["3º periodo de ferias"] ? { start: c["3º periodo de ferias"], end: c["3º periodo de ferias"] } : null
-      ].filter(Boolean)
-    }));
-    updateAll();
-  } catch (err) {
-    console.error("fetchAndUpdate erro:", err);
-    // mantém a UI com o estado atual
-    updateAll();
-  }
+  }, 12000);
 }
 
-// --- FIM DA INTERFACE DE EDIÇÃO ---
-  document.getElementById("close-pin").onclick = function() {
-  document.getElementById("pin-modal").style.display = "none";
-};  
-});
-      
-  </script> 
+// Chama notificações automáticas ao abrir
+function checkAutoNotifications() {
+  const today = new Date();
+  const todayMonth = today.getMonth();
+  const todayDay = today.getDate();
+
+  // Aniversariantes do dia
+  const aniversariantesHoje = collaborators.filter(c =>
+    getBirthdayMonth(c.birthday) === todayMonth &&
+    getBirthdayDay(c.birthday) === todayDay
+  );
+  if (aniversariantesHoje.length) {
+    showNotification(
+      `Hoje é aniversário de: ${aniversariantesHoje.map(c=>c.name).join(', ')}`,
+      "fa-birthday-cake",
+      "#ef6c00"
+    );
+  }
+
+  // Férias a expirar
+  const expiring = getExpiringVacations(collaborators, todayMonth, today.getFullYear());
+  if (expiring.length) {
+    showNotification(
+      `Atenção: ${expiring.length} colaborador${expiring.length===1?'':'es'} com férias a expirar!`,
+      "fa-hourglass-end",
+      "#d81c1c"
+    );
+  }
+}
+checkAutoNotifications();
+updateAll();
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
 
 
 
